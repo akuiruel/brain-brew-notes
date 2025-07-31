@@ -6,6 +6,7 @@ interface ContentItem {
   type: 'text' | 'math' | 'code';
   content: string;
   title?: string;
+  color?: string;
 }
 
 interface CheatSheetData {
@@ -119,17 +120,17 @@ const CheatSheetPDF = ({ data }: { data: CheatSheetData }) => (
           )}
           
           {item.type === 'text' && (
-            <Text style={styles.text}>{item.content}</Text>
+            <Text style={[styles.text, { color: item.color || '#000000' }]}>{item.content}</Text>
           )}
           
           {item.type === 'math' && (
-            <Text style={styles.math}>
+            <Text style={[styles.math, { color: item.color || '#000000' }]}>
               {renderMathToText(item.content)}
             </Text>
           )}
           
           {item.type === 'code' && (
-            <Text style={styles.code}>{item.content}</Text>
+            <Text style={[styles.code, { color: item.color || '#000000' }]}>{item.content}</Text>
           )}
         </View>
       ))}

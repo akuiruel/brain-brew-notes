@@ -18,6 +18,7 @@ interface ContentItem {
   type: 'text' | 'math' | 'code';
   content: string;
   title?: string;
+  color?: string;
 }
 
 const EditCheatSheet = () => {
@@ -93,6 +94,7 @@ const EditCheatSheet = () => {
       type,
       content: '',
       title: '',
+      color: '#000000',
     };
     setContentItems(prev => [...prev, newItem]);
   };
@@ -284,13 +286,30 @@ const EditCheatSheet = () => {
                           </div>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                          <div>
-                            <Label>Title (optional)</Label>
-                            <Input
-                              value={item.title || ''}
-                              onChange={(e) => updateContentItem(item.id, { title: e.target.value })}
-                              placeholder="Enter section title"
-                            />
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                              <Label>Title (optional)</Label>
+                              <Input
+                                value={item.title || ''}
+                                onChange={(e) => updateContentItem(item.id, { title: e.target.value })}
+                                placeholder="Enter section title"
+                              />
+                            </div>
+                            <div>
+                              <Label>Text Color</Label>
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="color"
+                                  value={item.color || '#000000'}
+                                  onChange={(e) => updateContentItem(item.id, { color: e.target.value })}
+                                  className="w-full h-10 rounded-md border border-input cursor-pointer"
+                                />
+                                <div 
+                                  className="w-6 h-6 rounded border border-input shrink-0"
+                                  style={{ backgroundColor: item.color || '#000000' }}
+                                />
+                              </div>
+                            </div>
                           </div>
                           
                           {item.type === 'text' && (
@@ -301,7 +320,15 @@ const EditCheatSheet = () => {
                                 onChange={(e) => updateContentItem(item.id, { content: e.target.value })}
                                 placeholder="Enter text content"
                                 rows={4}
+                                style={{ color: item.color || '#000000' }}
                               />
+                              <div 
+                                className="mt-2 p-3 border rounded-md bg-muted/50"
+                                style={{ color: item.color || '#000000' }}
+                              >
+                                <Label className="text-xs text-muted-foreground">Preview:</Label>
+                                <div className="whitespace-pre-wrap">{item.content || 'Type content to see preview...'}</div>
+                              </div>
                             </div>
                           )}
                           
@@ -321,7 +348,15 @@ const EditCheatSheet = () => {
                                 placeholder="Enter code snippet"
                                 rows={6}
                                 className="font-mono"
+                                style={{ color: item.color || '#000000' }}
                               />
+                              <div 
+                                className="mt-2 p-3 border rounded-md bg-muted/50 font-mono text-sm"
+                                style={{ color: item.color || '#000000' }}
+                              >
+                                <Label className="text-xs text-muted-foreground">Preview:</Label>
+                                <pre className="whitespace-pre-wrap">{item.content || 'Type code to see preview...'}</pre>
+                              </div>
                             </div>
                           )}
                         </CardContent>
