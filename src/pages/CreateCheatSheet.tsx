@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import RichTextEditor from '@/components/RichTextEditor';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
@@ -272,19 +273,18 @@ const CreateCheatSheet = () => {
                           {item.type === 'text' && (
                             <div>
                               <Label>Content</Label>
-                              <Textarea
+                              <RichTextEditor
                                 value={item.content}
-                                onChange={(e) => updateContentItem(item.id, { content: e.target.value })}
-                                placeholder="Enter text content"
-                                rows={4}
-                                style={{ color: item.color || '#000000' }}
+                                onChange={(content) => updateContentItem(item.id, { content })}
+                                placeholder="Enter text content with color formatting"
+                                className="mt-2"
                               />
-                              <div 
-                                className="mt-2 p-3 border rounded-md bg-muted/50"
-                                style={{ color: item.color || '#000000' }}
-                              >
+                              <div className="mt-2 p-3 border rounded-md bg-muted/50">
                                 <Label className="text-xs text-muted-foreground">Preview:</Label>
-                                <div className="whitespace-pre-wrap">{item.content || 'Type content to see preview...'}</div>
+                                <div 
+                                  className="prose prose-sm max-w-none"
+                                  dangerouslySetInnerHTML={{ __html: item.content || 'Type content to see preview...' }}
+                                />
                               </div>
                             </div>
                           )}

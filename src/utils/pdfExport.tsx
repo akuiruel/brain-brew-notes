@@ -120,7 +120,9 @@ const CheatSheetPDF = ({ data }: { data: CheatSheetData }) => (
           )}
           
           {item.type === 'text' && (
-            <Text style={[styles.text, { color: item.color || '#000000' }]}>{item.content}</Text>
+            <Text style={[styles.text, { color: item.color || '#000000' }]}>
+              {item.content.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&')}
+            </Text>
           )}
           
           {item.type === 'math' && (
