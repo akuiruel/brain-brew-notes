@@ -93,7 +93,52 @@ const styles = StyleSheet.create({
   },
 });
 
-// Helper function to strip HTML and preserve basic formatting
+// Helper function to parse HTML and extract text with color information
+const parseHtmlContent = (html: string): Array<{ text: string; color?: string }> => {
+  const segments: Array<{ text: string; color?: string }> = [];
+  
+  // Create a temporary div to parse HTML
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = html;
+  
+  const processNode = (node: Node): void => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const text = node.textContent?.trim();
+      if (text) {
+        segments.push({ text });
+      }
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      const element = node as HTMLElement;
+      const style = element.getAttribute('style');
+      let color: string | undefined;
+      
+      // Extract color from inline style
+      if (style) {
+        const colorMatch = style.match(/color:\s*([^;]+)/i);
+        if (colorMatch) {
+          color = colorMatch[1].trim();
+        }
+      }
+      
+      // Process child nodes
+      for (const child of Array.from(node.childNodes)) {
+        if (child.nodeType === Node.TEXT_NODE) {
+          const text = child.textContent?.trim();
+          if (text) {
+            segments.push({ text, color });
+          }
+        } else {
+          processNode(child);
+        }
+      }
+    }
+  };
+  
+  processNode(tempDiv);
+  return segments;
+};
+
+// Helper function to strip HTML and preserve basic formatting  
 const stripHtml = (html: string): string => {
   return html
     .replace(/<br\s*\/?>/gi, '\n')
@@ -143,21 +188,51 @@ const CheatSheetPDF = ({ data }: { data: CheatSheetData }) => (
           
           <View style={styles.contentBox}>
             {item.type === 'text' && (
-              <Text style={[styles.text, { color: item.color || '#000000' }]}>
-                {stripHtml(item.content)}
-              </Text>
+              <View>
+                {parseHtmlContent(item.content).map((segment, segIndex) => (
+                  <Text 
+                    key={segIndex}
+                    style={[
+                      styles.text, 
+                      { color: segment.color || item.color || '#000000' }
+                    ]}
+                  >
+                    {segment.text}
+                  </Text>
+                ))}
+              </View>
             )}
             
             {item.type === 'math' && (
-              <Text style={[styles.math, { color: item.color || '#000000' }]}>
-                {stripHtml(item.content)}
-              </Text>
+              <View>
+                {parseHtmlContent(item.content).map((segment, segIndex) => (
+                  <Text 
+                    key={segIndex}
+                    style={[
+                      styles.math, 
+                      { color: segment.color || item.color || '#000000' }
+                    ]}
+                  >
+                    {segment.text}
+                  </Text>
+                ))}
+              </View>
             )}
             
             {item.type === 'code' && (
-              <Text style={[styles.code, { color: item.color || '#000000' }]}>
-                {stripHtml(item.content)}
-              </Text>
+              <View>
+                {parseHtmlContent(item.content).map((segment, segIndex) => (
+                  <Text 
+                    key={segIndex}
+                    style={[
+                      styles.code, 
+                      { color: segment.color || item.color || '#000000' }
+                    ]}
+                  >
+                    {segment.text}
+                  </Text>
+                ))}
+              </View>
             )}
           </View>
         </View>
