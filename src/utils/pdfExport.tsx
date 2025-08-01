@@ -55,35 +55,57 @@ const styles = StyleSheet.create({
   },
   section: {
     marginBottom: 15,
+    padding: 12,
+    backgroundColor: '#f9f9f9',
+    border: '1 solid #e0e0e0',
+    borderRadius: 6,
   },
   sectionTitle: {
     fontSize: 14,
     fontWeight: 'bold',
-    marginBottom: 5,
-    color: '#333333',
+    marginBottom: 8,
+    color: '#1e3a8a',
+    backgroundColor: '#ffffff',
+    padding: 6,
+    borderRadius: 4,
+  },
+  contentBox: {
+    backgroundColor: '#ffffff',
+    padding: 10,
+    borderRadius: 4,
+    border: '1 solid #d1d5db',
   },
   text: {
     fontSize: 11,
-    lineHeight: 1.4,
+    lineHeight: 1.5,
     textAlign: 'justify',
   },
   code: {
     fontSize: 10,
     fontFamily: 'Courier',
-    backgroundColor: '#f5f5f5',
-    padding: 10,
-    borderRadius: 4,
-    lineHeight: 1.3,
+    backgroundColor: '#f8f9fa',
+    lineHeight: 1.4,
   },
   math: {
-    fontSize: 12,
-    textAlign: 'center',
-    backgroundColor: '#f9f9f9',
-    padding: 10,
-    borderRadius: 4,
-    marginVertical: 5,
+    fontSize: 11,
+    lineHeight: 1.4,
+    backgroundColor: '#f0f8ff',
   },
 });
+
+// Helper function to strip HTML and preserve basic formatting
+const stripHtml = (html: string): string => {
+  return html
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>/gi, '\n')
+    .replace(/<p[^>]*>/gi, '')
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .trim();
+};
 
 const renderMathToText = (latex: string): string => {
   // Convert common LaTeX to readable text
@@ -119,21 +141,25 @@ const CheatSheetPDF = ({ data }: { data: CheatSheetData }) => (
             <Text style={styles.sectionTitle}>{item.title}</Text>
           )}
           
-          {item.type === 'text' && (
-            <Text style={[styles.text, { color: item.color || '#000000' }]}>
-              {item.content.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&')}
-            </Text>
-          )}
-          
-          {item.type === 'math' && (
-            <Text style={[styles.math, { color: item.color || '#000000' }]}>
-              {renderMathToText(item.content)}
-            </Text>
-          )}
-          
-          {item.type === 'code' && (
-            <Text style={[styles.code, { color: item.color || '#000000' }]}>{item.content}</Text>
-          )}
+          <View style={styles.contentBox}>
+            {item.type === 'text' && (
+              <Text style={[styles.text, { color: item.color || '#000000' }]}>
+                {stripHtml(item.content)}
+              </Text>
+            )}
+            
+            {item.type === 'math' && (
+              <Text style={[styles.math, { color: item.color || '#000000' }]}>
+                {stripHtml(item.content)}
+              </Text>
+            )}
+            
+            {item.type === 'code' && (
+              <Text style={[styles.code, { color: item.color || '#000000' }]}>
+                {stripHtml(item.content)}
+              </Text>
+            )}
+          </View>
         </View>
       ))}
     </Page>

@@ -333,29 +333,39 @@ const EditCheatSheet = () => {
                           )}
                           
                           {item.type === 'math' && (
-                            <MathEditor
-                              initialValue={item.content}
-                              onChange={(latex) => updateContentItem(item.id, { content: latex })}
-                            />
+                            <div>
+                              <Label>Content</Label>
+                              <RichTextEditor
+                                value={item.content}
+                                onChange={(content) => updateContentItem(item.id, { content })}
+                                placeholder="Enter math formula or description..."
+                                className="mt-2"
+                              />
+                              <div className="mt-2 p-3 border rounded-md bg-muted/50">
+                                <Label className="text-xs text-muted-foreground">Preview:</Label>
+                                <div 
+                                  className="prose prose-sm max-w-none"
+                                  dangerouslySetInnerHTML={{ __html: item.content || 'Type content to see preview...' }}
+                                />
+                              </div>
+                            </div>
                           )}
                           
                           {item.type === 'code' && (
                             <div>
-                              <Label>Code</Label>
-                              <Textarea
+                              <Label>Content</Label>
+                              <RichTextEditor
                                 value={item.content}
-                                onChange={(e) => updateContentItem(item.id, { content: e.target.value })}
-                                placeholder="Enter code snippet"
-                                rows={6}
-                                className="font-mono"
-                                style={{ color: item.color || '#000000' }}
+                                onChange={(content) => updateContentItem(item.id, { content })}
+                                placeholder="Enter code..."
+                                className="mt-2"
                               />
-                              <div 
-                                className="mt-2 p-3 border rounded-md bg-muted/50 font-mono text-sm"
-                                style={{ color: item.color || '#000000' }}
-                              >
+                              <div className="mt-2 p-3 border rounded-md bg-muted/50">
                                 <Label className="text-xs text-muted-foreground">Preview:</Label>
-                                <pre className="whitespace-pre-wrap">{item.content || 'Type code to see preview...'}</pre>
+                                <div 
+                                  className="prose prose-sm max-w-none font-mono"
+                                  dangerouslySetInnerHTML={{ __html: item.content || 'Type content to see preview...' }}
+                                />
                               </div>
                             </div>
                           )}
