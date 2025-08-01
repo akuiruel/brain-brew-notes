@@ -59,6 +59,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f9f9f9',
     border: '1 solid #e0e0e0',
     borderRadius: 6,
+    breakInside: 'avoid',
   },
   sectionTitle: {
     fontSize: 14,
@@ -90,6 +91,11 @@ const styles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 1.4,
     backgroundColor: '#f0f8ff',
+  },
+  pageBreak: {
+    marginTop: 20,
+    borderTop: '1 solid #e0e0e0',
+    paddingTop: 20,
   },
 });
 
@@ -169,77 +175,99 @@ const renderMathToText = (latex: string): string => {
     .replace(/\\/g, '');
 };
 
-const CheatSheetPDF = ({ data }: { data: CheatSheetData }) => (
-  <Document>
-    <Page size="A4" style={styles.page}>
-      <View style={styles.header}>
-        <Text style={styles.title}>{data.title}</Text>
-        {data.description && (
-          <Text style={styles.description}>{data.description}</Text>
-        )}
-        <Text style={styles.category}>{data.category.toUpperCase()}</Text>
-      </View>
+const CheatSheetPDF = ({ data }: { data: CheatSheetData }) => {
+  // Split content into chunks for better page management
+  const itemsPerPage = 6; // Adjust based on content density
+  const pages: ContentItem[][] = [];
+  
+  for (let i = 0; i < data.content.items.length; i += itemsPerPage) {
+    pages.push(data.content.items.slice(i, i + itemsPerPage));
+  }
 
-      {data.content.items.map((item, index) => (
-        <View key={item.id} style={styles.section}>
-          {item.title && (
-            <Text style={styles.sectionTitle}>{item.title}</Text>
+  return (
+    <Document>
+      {pages.map((pageItems, pageIndex) => (
+        <Page key={pageIndex} size="A4" style={styles.page} wrap>
+          {pageIndex === 0 && (
+            <View style={styles.header}>
+              <Text style={styles.title}>{data.title}</Text>
+              {data.description && (
+                <Text style={styles.description}>{data.description}</Text>
+              )}
+              <Text style={styles.category}>{data.category.toUpperCase()}</Text>
+            </View>
           )}
-          
-          <View style={styles.contentBox}>
-            {item.type === 'text' && (
-              <View>
-                {parseHtmlContent(item.content).map((segment, segIndex) => (
-                  <Text 
-                    key={segIndex}
-                    style={[
-                      styles.text, 
-                      { color: segment.color || item.color || '#000000' }
-                    ]}
-                  >
-                    {segment.text}
-                  </Text>
-                ))}
+
+          {pageIndex > 0 && (
+            <View style={styles.pageBreak}>
+              <Text style={[styles.title, { color: '#1e3a8a', fontSize: 18 }]}>
+                {data.title} (continued)
+              </Text>
+            </View>
+          )}
+
+          {pageItems.map((item, index) => (
+            <View key={item.id} style={styles.section} wrap={false}>
+              {item.title && (
+                <Text style={styles.sectionTitle}>{item.title}</Text>
+              )}
+              
+              <View style={styles.contentBox}>
+                {item.type === 'text' && (
+                  <View>
+                    {parseHtmlContent(item.content).map((segment, segIndex) => (
+                      <Text 
+                        key={segIndex}
+                        style={[
+                          styles.text, 
+                          { color: segment.color || item.color || '#000000' }
+                        ]}
+                      >
+                        {segment.text}
+                      </Text>
+                    ))}
+                  </View>
+                )}
+                
+                {item.type === 'math' && (
+                  <View>
+                    {parseHtmlContent(item.content).map((segment, segIndex) => (
+                      <Text 
+                        key={segIndex}
+                        style={[
+                          styles.math, 
+                          { color: segment.color || item.color || '#000000' }
+                        ]}
+                      >
+                        {segment.text}
+                      </Text>
+                    ))}
+                  </View>
+                )}
+                
+                {item.type === 'code' && (
+                  <View>
+                    {parseHtmlContent(item.content).map((segment, segIndex) => (
+                      <Text 
+                        key={segIndex}
+                        style={[
+                          styles.code, 
+                          { color: segment.color || item.color || '#000000' }
+                        ]}
+                      >
+                        {segment.text}
+                      </Text>
+                    ))}
+                  </View>
+                )}
               </View>
-            )}
-            
-            {item.type === 'math' && (
-              <View>
-                {parseHtmlContent(item.content).map((segment, segIndex) => (
-                  <Text 
-                    key={segIndex}
-                    style={[
-                      styles.math, 
-                      { color: segment.color || item.color || '#000000' }
-                    ]}
-                  >
-                    {segment.text}
-                  </Text>
-                ))}
-              </View>
-            )}
-            
-            {item.type === 'code' && (
-              <View>
-                {parseHtmlContent(item.content).map((segment, segIndex) => (
-                  <Text 
-                    key={segIndex}
-                    style={[
-                      styles.code, 
-                      { color: segment.color || item.color || '#000000' }
-                    ]}
-                  >
-                    {segment.text}
-                  </Text>
-                ))}
-              </View>
-            )}
-          </View>
-        </View>
+            </View>
+          ))}
+        </Page>
       ))}
-    </Page>
-  </Document>
-);
+    </Document>
+  );
+};
 
 export const exportToPDF = async (data: CheatSheetData): Promise<void> => {
   try {
