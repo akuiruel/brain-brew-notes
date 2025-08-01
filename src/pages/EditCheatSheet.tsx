@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import RichTextEditor from '@/components/RichTextEditor';
+import MathRichTextEditor from '@/components/MathRichTextEditor';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Save, Plus, Trash2 } from 'lucide-react';
@@ -287,30 +288,13 @@ const EditCheatSheet = () => {
                           </div>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                              <Label>Title (optional)</Label>
-                              <Input
-                                value={item.title || ''}
-                                onChange={(e) => updateContentItem(item.id, { title: e.target.value })}
-                                placeholder="Enter section title"
-                              />
-                            </div>
-                            <div>
-                              <Label>Text Color</Label>
-                              <div className="flex items-center gap-2">
-                                <input
-                                  type="color"
-                                  value={item.color || '#000000'}
-                                  onChange={(e) => updateContentItem(item.id, { color: e.target.value })}
-                                  className="w-full h-10 rounded-md border border-input cursor-pointer"
-                                />
-                                <div 
-                                  className="w-6 h-6 rounded border border-input shrink-0"
-                                  style={{ backgroundColor: item.color || '#000000' }}
-                                />
-                              </div>
-                            </div>
+                          <div>
+                            <Label>Title (optional)</Label>
+                            <Input
+                              value={item.title || ''}
+                              onChange={(e) => updateContentItem(item.id, { title: e.target.value })}
+                              placeholder="Enter section title"
+                            />
                           </div>
                           
                           {item.type === 'text' && (
@@ -335,10 +319,10 @@ const EditCheatSheet = () => {
                           {item.type === 'math' && (
                             <div>
                               <Label>Content</Label>
-                              <RichTextEditor
+                              <MathRichTextEditor
                                 value={item.content}
                                 onChange={(content) => updateContentItem(item.id, { content })}
-                                placeholder="Enter math formula or description..."
+                                placeholder="Enter math formulas and text..."
                                 className="mt-2"
                               />
                               <div className="mt-2 p-3 border rounded-md bg-muted/50">
