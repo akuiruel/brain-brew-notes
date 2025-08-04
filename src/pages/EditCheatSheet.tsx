@@ -309,8 +309,8 @@ const EditCheatSheet = () => {
                               <div className="mt-2 p-3 border rounded-md bg-muted/50">
                                 <Label className="text-xs text-muted-foreground">Preview:</Label>
                                 <div 
-                                  className="prose prose-sm max-w-none"
-                                  dangerouslySetInnerHTML={{ __html: item.content || 'Type content to see preview...' }}
+                                  className="prose prose-sm max-w-none text-foreground"
+                                  dangerouslySetInnerHTML={{ __html: item.content || "Type content to see preview..." }}
                                 />
                               </div>
                             </div>
@@ -328,8 +328,8 @@ const EditCheatSheet = () => {
                               <div className="mt-2 p-3 border rounded-md bg-muted/50">
                                 <Label className="text-xs text-muted-foreground">Preview:</Label>
                                 <div 
-                                  className="prose prose-sm max-w-none"
-                                  dangerouslySetInnerHTML={{ __html: item.content || 'Type content to see preview...' }}
+                                  className="prose prose-sm max-w-none text-foreground"
+                                  dangerouslySetInnerHTML={{ __html: item.content || "Type content to see preview..." }}
                                 />
                               </div>
                             </div>
@@ -344,11 +344,11 @@ const EditCheatSheet = () => {
                                 placeholder="Enter code..."
                                 className="mt-2"
                               />
-                              <div className="mt-2 p-3 border rounded-md bg-muted/50">
-                                <Label className="text-xs text-muted-foreground">Preview:</Label>
+                              <div className="mt-2 p-3 border rounded-md bg-slate-950 text-green-400">
+                                <Label className="text-xs text-slate-400">Preview:</Label>
                                 <div 
-                                  className="prose prose-sm max-w-none font-mono"
-                                  dangerouslySetInnerHTML={{ __html: item.content || 'Type content to see preview...' }}
+                                  className="prose prose-sm max-w-none font-mono text-green-400 [&_p]:text-green-400 [&_span]:text-green-400"
+                                  dangerouslySetInnerHTML={{ __html: item.content || "Type content to see preview..." }}
                                 />
                               </div>
                             </div>
