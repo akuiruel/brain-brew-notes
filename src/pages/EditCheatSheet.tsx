@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
+import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/integrations/firebase/client';
 import Layout from '@/components/Layout';
-import MathEditor from '@/components/MathEditor';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,14 +14,7 @@ import MathRichTextEditor from '@/components/MathRichTextEditor';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Save, Plus, Trash2 } from 'lucide-react';
-
-interface ContentItem {
-  id: string;
-  type: 'text' | 'math' | 'code';
-  content: string;
-  title?: string;
-  color?: string;
-}
+import type { ContentItem, CheatSheetCategory, CheatSheet } from '@/integrations/firebase/types';
 
 const EditCheatSheet = () => {
   const { user, loading } = useAuth();
@@ -31,7 +24,7 @@ const EditCheatSheet = () => {
   
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState<string>('');
+  const [category, setCategory] = useState<CheatSheetCategory | ''>('');
   const [contentItems, setContentItems] = useState<ContentItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
@@ -44,15 +37,22 @@ const EditCheatSheet = () => {
 
   const fetchCheatSheet = async () => {
     try {
-      const { data, error } = await supabase
-        .from('cheat_sheets')
-        .select('*')
-        .eq('id', id)
-        .single();
+      const docRef = doc(db, 'cheatSheets', id!);
+      const docSnap = await getDoc(docRef);
 
-      if (error) throw error;
+      if (!docSnap.exists()) {
+        toast({
+          title: "Error",
+          description: "Cheat sheet not found",
+          variant: "destructive",
+        });
+        navigate('/');
+        return;
+      }
 
-      if (data.user_id !== user?.id) {
+      const data = docSnap.data() as CheatSheet;
+
+      if (data.userId !== user?.uid) {
         toast({
           title: "Error",
           description: "You don't have permission to edit this cheat sheet",
@@ -65,8 +65,9 @@ const EditCheatSheet = () => {
       setTitle(data.title);
       setDescription(data.description || '');
       setCategory(data.category);
-      setContentItems((data.content as any)?.items || []);
+      setContentItems(data.content?.items || []);
     } catch (error) {
+      console.error('Error fetching cheat sheet:', error);
       toast({
         title: "Error",
         description: "Failed to fetch cheat sheet",
@@ -133,17 +134,14 @@ const EditCheatSheet = () => {
     setIsLoading(true);
 
     try {
-      const { error } = await supabase
-        .from('cheat_sheets')
-        .update({
-          title: title.trim(),
-          description: description.trim(),
-          category: category as any,
-          content: { items: contentItems } as any,
-        })
-        .eq('id', id);
-
-      if (error) throw error;
+      const docRef = doc(db, 'cheatSheets', id!);
+      await updateDoc(docRef, {
+        title: title.trim(),
+        description: description.trim(),
+        category: category as CheatSheetCategory,
+        content: { items: contentItems },
+        updatedAt: serverTimestamp(),
+      });
 
       toast({
         title: "Success",
@@ -152,6 +150,7 @@ const EditCheatSheet = () => {
       
       navigate('/');
     } catch (error) {
+      console.error('Error updating cheat sheet:', error);
       toast({
         title: "Error",
         description: "Failed to update cheat sheet",

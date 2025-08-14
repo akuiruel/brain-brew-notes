@@ -1,7 +1,16 @@
 import { useEffect, useState } from 'react';
 import { Navigate, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
+import { 
+  collection, 
+  query, 
+  where, 
+  orderBy, 
+  getDocs, 
+  deleteDoc, 
+  doc 
+} from 'firebase/firestore';
+import { db } from '@/integrations/firebase/client';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,16 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Download, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { exportToPDF } from '@/utils/pdfExport';
-
-interface CheatSheet {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  content: any;
-  created_at: string;
-  updated_at: string;
-}
+import type { CheatSheet } from '@/integrations/firebase/types';
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -34,14 +34,28 @@ const Index = () => {
 
   const fetchCheatSheets = async () => {
     try {
-      const { data, error } = await supabase
-        .from('cheat_sheets')
-        .select('*')
-        .order('updated_at', { ascending: false });
-
-      if (error) throw error;
-      setCheatSheets(data || []);
+      const q = query(
+        collection(db, 'cheatSheets'),
+        where('userId', '==', user?.uid),
+        orderBy('updatedAt', 'desc')
+      );
+      
+      const querySnapshot = await getDocs(q);
+      const sheets: CheatSheet[] = [];
+      
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        sheets.push({
+          id: doc.id,
+          ...data,
+          createdAt: data.createdAt.toDate(),
+          updatedAt: data.updatedAt.toDate(),
+        } as CheatSheet);
+      });
+      
+      setCheatSheets(sheets);
     } catch (error) {
+      console.error('Error fetching cheat sheets:', error);
       toast({
         title: "Error",
         description: "Failed to fetch cheat sheets",
@@ -54,12 +68,7 @@ const Index = () => {
 
   const deleteCheatSheet = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('cheat_sheets')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      await deleteDoc(doc(db, 'cheatSheets', id));
       
       setCheatSheets(prev => prev.filter(sheet => sheet.id !== id));
       toast({
@@ -67,6 +76,7 @@ const Index = () => {
         description: "Cheat sheet deleted successfully",
       });
     } catch (error) {
+      console.error('Error deleting cheat sheet:', error);
       toast({
         title: "Error",
         description: "Failed to delete cheat sheet",
@@ -161,7 +171,7 @@ const Index = () => {
                 <CardContent>
                   <div className="flex items-center justify-between">
                     <div className="text-sm text-muted-foreground">
-                      Updated {new Date(sheet.updated_at).toLocaleDateString()}
+                      Updated {sheet.updatedAt.toLocaleDateString()}
                     </div>
                     <div className="flex items-center gap-2">
                       <Link to={`/edit/${sheet.id}`}>

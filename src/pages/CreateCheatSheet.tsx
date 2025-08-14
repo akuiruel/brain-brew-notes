@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/integrations/firebase/client';
 import Layout from '@/components/Layout';
-import MathEditor from '@/components/MathEditor';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,17 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import RichTextEditor from '@/components/RichTextEditor';
 import MathRichTextEditor from '@/components/MathRichTextEditor';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Save, Plus, Trash2 } from 'lucide-react';
-
-interface ContentItem {
-  id: string;
-  type: 'text' | 'math' | 'code';
-  content: string;
-  title?: string;
-  color?: string;
-}
+import type { ContentItem, CheatSheetCategory, CheatSheetData } from '@/integrations/firebase/types';
 
 const CreateCheatSheet = () => {
   const { user, loading } = useAuth();
@@ -31,7 +23,7 @@ const CreateCheatSheet = () => {
   
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState<string>('');
+  const [category, setCategory] = useState<CheatSheetCategory | ''>('');
   const [contentItems, setContentItems] = useState<ContentItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -90,17 +82,18 @@ const CreateCheatSheet = () => {
     setIsLoading(true);
 
     try {
-      const { error } = await supabase
-        .from('cheat_sheets')
-        .insert({
-          title: title.trim(),
-          description: description.trim(),
-          category: category as any,
-          content: { items: contentItems } as any,
-          user_id: user.id,
-        });
+      const cheatSheetData: CheatSheetData = {
+        userId: user.uid,
+        title: title.trim(),
+        description: description.trim(),
+        category: category as CheatSheetCategory,
+        content: { items: contentItems },
+        isPublic: false,
+        createdAt: serverTimestamp() as any,
+        updatedAt: serverTimestamp() as any,
+      };
 
-      if (error) throw error;
+      await addDoc(collection(db, 'cheatSheets'), cheatSheetData);
 
       toast({
         title: "Success",
@@ -109,6 +102,7 @@ const CreateCheatSheet = () => {
       
       navigate('/');
     } catch (error) {
+      console.error('Error creating cheat sheet:', error);
       toast({
         title: "Error",
         description: "Failed to create cheat sheet",
