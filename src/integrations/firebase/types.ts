@@ -11,16 +11,6 @@ export interface CheatSheet {
   updatedAt: Date;
 }
 
-export interface Profile {
-  id: string;
-  userId: string;
-  username?: string;
-  fullName?: string;
-  avatarUrl?: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
 export interface CheatSheetContent {
   items: ContentItem[];
 }
@@ -37,4 +27,3 @@ export type CheatSheetCategory = 'mathematics' | 'software' | 'coding' | 'study'
 
 // Firestore document data (without id)
 export type CheatSheetData = Omit<CheatSheet, 'id'>;
-export type ProfileData = Omit<Profile, 'id'>;

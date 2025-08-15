@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Navigate, useNavigate, useParams } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
-import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/integrations/firebase/client';
+import { useNavigate, useParams } from 'react-router-dom';
+import { getCheatSheetById, updateCheatSheet } from '@/lib/storage';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,10 +12,9 @@ import MathRichTextEditor from '@/components/MathRichTextEditor';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Save, Plus, Trash2 } from 'lucide-react';
-import type { ContentItem, CheatSheetCategory, CheatSheet } from '@/integrations/firebase/types';
+import type { ContentItem, CheatSheetCategory } from '@/integrations/firebase/types';
 
 const EditCheatSheet = () => {
-  const { user, loading } = useAuth();
   const navigate = useNavigate();
   const { id } = useParams();
   const { toast } = useToast();
@@ -30,32 +27,19 @@ const EditCheatSheet = () => {
   const [isFetching, setIsFetching] = useState(true);
 
   useEffect(() => {
-    if (user && id) {
+    if (id) {
       fetchCheatSheet();
     }
-  }, [user, id]);
+  }, [id]);
 
   const fetchCheatSheet = async () => {
     try {
-      const docRef = doc(db, 'cheatSheets', id!);
-      const docSnap = await getDoc(docRef);
+      const data = getCheatSheetById(id!);
 
-      if (!docSnap.exists()) {
+      if (!data) {
         toast({
           title: "Error",
           description: "Cheat sheet not found",
-          variant: "destructive",
-        });
-        navigate('/');
-        return;
-      }
-
-      const data = docSnap.data() as CheatSheet;
-
-      if (data.userId !== user?.uid) {
-        toast({
-          title: "Error",
-          description: "You don't have permission to edit this cheat sheet",
           variant: "destructive",
         });
         navigate('/');
@@ -79,16 +63,12 @@ const EditCheatSheet = () => {
     }
   };
 
-  if (loading || isFetching) {
+  if (isFetching) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">Loading...</div>
       </div>
     );
-  }
-
-  if (!user) {
-    return <Navigate to="/auth" replace />;
   }
 
   const addContentItem = (type: 'text' | 'math' | 'code') => {
@@ -134,21 +114,23 @@ const EditCheatSheet = () => {
     setIsLoading(true);
 
     try {
-      const docRef = doc(db, 'cheatSheets', id!);
-      await updateDoc(docRef, {
+      const success = updateCheatSheet(id!, {
         title: title.trim(),
         description: description.trim(),
         category: category as CheatSheetCategory,
         content: { items: contentItems },
-        updatedAt: serverTimestamp(),
       });
 
-      toast({
-        title: "Success",
-        description: "Cheat sheet updated successfully!",
-      });
-      
-      navigate('/');
+      if (success) {
+        toast({
+          title: "Success",
+          description: "Cheat sheet updated successfully!",
+        });
+        
+        navigate('/');
+      } else {
+        throw new Error('Failed to update cheat sheet');
+      }
     } catch (error) {
       console.error('Error updating cheat sheet:', error);
       toast({

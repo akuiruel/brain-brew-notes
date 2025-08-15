@@ -1,8 +1,6 @@
 import { useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/integrations/firebase/client';
+import { useNavigate } from 'react-router-dom';
+import { saveCheatSheet } from '@/lib/storage';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,10 +12,9 @@ import MathRichTextEditor from '@/components/MathRichTextEditor';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Save, Plus, Trash2 } from 'lucide-react';
-import type { ContentItem, CheatSheetCategory, CheatSheetData } from '@/integrations/firebase/types';
+import type { ContentItem, CheatSheetCategory } from '@/integrations/firebase/types';
 
 const CreateCheatSheet = () => {
-  const { user, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -26,18 +23,6 @@ const CreateCheatSheet = () => {
   const [category, setCategory] = useState<CheatSheetCategory | ''>('');
   const [contentItems, setContentItems] = useState<ContentItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">Loading...</div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
 
   const addContentItem = (type: 'text' | 'math' | 'code') => {
     const newItem: ContentItem = {
@@ -82,18 +67,16 @@ const CreateCheatSheet = () => {
     setIsLoading(true);
 
     try {
-      const cheatSheetData: CheatSheetData = {
-        userId: user.uid,
+      const cheatSheetData = {
+        userId: 'anonymous',
         title: title.trim(),
         description: description.trim(),
         category: category as CheatSheetCategory,
         content: { items: contentItems },
         isPublic: false,
-        createdAt: serverTimestamp() as any,
-        updatedAt: serverTimestamp() as any,
       };
 
-      await addDoc(collection(db, 'cheatSheets'), cheatSheetData);
+      saveCheatSheet(cheatSheetData);
 
       toast({
         title: "Success",

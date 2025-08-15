@@ -1,16 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Navigate, Link } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
-import { 
-  collection, 
-  query, 
-  where, 
-  orderBy, 
-  getDocs, 
-  deleteDoc, 
-  doc 
-} from 'firebase/firestore';
-import { db } from '@/integrations/firebase/client';
+import { Link } from 'react-router-dom';
+import { getStoredCheatSheets, deleteCheatSheet as deleteStoredCheatSheet } from '@/lib/storage';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,40 +8,22 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Download, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { exportToPDF } from '@/utils/pdfExport';
-import type { CheatSheet } from '@/integrations/firebase/types';
+import type { StoredCheatSheet } from '@/lib/storage';
 
 const Index = () => {
-  const { user, loading } = useAuth();
   const { toast } = useToast();
-  const [cheatSheets, setCheatSheets] = useState<CheatSheet[]>([]);
+  const [cheatSheets, setCheatSheets] = useState<StoredCheatSheet[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (user) {
-      fetchCheatSheets();
-    }
-  }, [user]);
+    fetchCheatSheets();
+  }, []);
 
   const fetchCheatSheets = async () => {
     try {
-      const q = query(
-        collection(db, 'cheatSheets'),
-        where('userId', '==', user?.uid),
-        orderBy('updatedAt', 'desc')
-      );
-      
-      const querySnapshot = await getDocs(q);
-      const sheets: CheatSheet[] = [];
-      
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        sheets.push({
-          id: doc.id,
-          ...data,
-          createdAt: data.createdAt.toDate(),
-          updatedAt: data.updatedAt.toDate(),
-        } as CheatSheet);
-      });
+      const sheets = getStoredCheatSheets();
+      // Sort by updatedAt desc
+      sheets.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
       
       setCheatSheets(sheets);
     } catch (error) {
@@ -68,13 +40,17 @@ const Index = () => {
 
   const deleteCheatSheet = async (id: string) => {
     try {
-      await deleteDoc(doc(db, 'cheatSheets', id));
+      const success = deleteStoredCheatSheet(id);
       
-      setCheatSheets(prev => prev.filter(sheet => sheet.id !== id));
-      toast({
-        title: "Success",
-        description: "Cheat sheet deleted successfully",
-      });
+      if (success) {
+        setCheatSheets(prev => prev.filter(sheet => sheet.id !== id));
+        toast({
+          title: "Success",
+          description: "Cheat sheet deleted successfully",
+        });
+      } else {
+        throw new Error('Failed to delete cheat sheet');
+      }
     } catch (error) {
       console.error('Error deleting cheat sheet:', error);
       toast({
@@ -85,7 +61,7 @@ const Index = () => {
     }
   };
 
-  const handleExportPDF = async (sheet: CheatSheet) => {
+  const handleExportPDF = async (sheet: StoredCheatSheet) => {
     try {
       await exportToPDF({
         title: sheet.title,
@@ -106,17 +82,6 @@ const Index = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">Loading...</div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
 
   return (
     <Layout>
