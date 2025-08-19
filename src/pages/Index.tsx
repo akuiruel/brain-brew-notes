@@ -5,7 +5,7 @@ import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Download, Trash2 } from 'lucide-react';
+import { Plus, Edit, Download, Trash2, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { exportToPDF } from '@/utils/pdfExport';
 import type { StoredCheatSheet } from '@/lib/storage';
@@ -13,6 +13,8 @@ import type { StoredCheatSheet } from '@/lib/storage';
 const Index = () => {
   const { toast } = useToast();
   const [cheatSheets, setCheatSheets] = useState<StoredCheatSheet[]>([]);
+  const [selectedSheet, setSelectedSheet] = useState<StoredCheatSheet | null>(null);
+  const [viewMode, setViewMode] = useState<'list' | 'preview'>('list');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -83,6 +85,61 @@ const Index = () => {
   };
 
 
+  const renderContentPreview = (sheet: StoredCheatSheet) => {
+    if (!sheet.content?.items || sheet.content.items.length === 0) {
+      return (
+        <div className="text-center py-8 text-muted-foreground">
+          No content available
+        </div>
+      );
+    }
+
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {sheet.content.items.map((item, index) => (
+          <Card key={item.id} className="h-fit">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <Badge variant="outline" className="text-xs">
+                  {item.type === 'text' && 'Text'}
+                  {item.type === 'math' && 'Math'}
+                  {item.type === 'code' && 'Code'}
+                </Badge>
+                <span className="text-xs text-muted-foreground">#{index + 1}</span>
+              </div>
+              {item.title && (
+                <CardTitle className="text-sm font-medium">{item.title}</CardTitle>
+              )}
+            </CardHeader>
+            <CardContent className="pt-0">
+              {item.type === 'text' && (
+                <div 
+                  className="prose prose-sm max-w-none text-foreground [&_p]:mb-2 [&_p]:leading-relaxed"
+                  dangerouslySetInnerHTML={{ __html: item.content || "No content" }}
+                />
+              )}
+              
+              {item.type === 'math' && (
+                <div 
+                  className="prose prose-sm max-w-none text-foreground [&_p]:mb-2 [&_p]:leading-relaxed bg-amber-50 dark:bg-amber-950/20 p-3 rounded-md border border-amber-200 dark:border-amber-800"
+                  dangerouslySetInnerHTML={{ __html: item.content || "No content" }}
+                />
+              )}
+              
+              {item.type === 'code' && (
+                <div className="bg-slate-950 text-green-400 p-3 rounded-md border font-mono text-sm">
+                  <div 
+                    className="[&_p]:mb-1 [&_p]:leading-relaxed [&_span]:text-green-400"
+                    dangerouslySetInnerHTML={{ __html: item.content || "No content" }}
+                  />
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  };
   return (
     <Layout>
       <div className="space-y-6">
@@ -93,15 +150,60 @@ const Index = () => {
               Create and manage your personal cheat sheets
             </p>
           </div>
-          <Link to="/create">
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              Create New
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            {viewMode === 'preview' && (
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setViewMode('list');
+                  setSelectedSheet(null);
+                }}
+              >
+                Back to List
+              </Button>
+            )}
+            <Link to="/create">
+              <Button className="gap-2">
+                <Plus className="h-4 w-4" />
+                Create New
+              </Button>
+            </Link>
+          </div>
         </div>
 
-        {isLoading ? (
+        {viewMode === 'preview' && selectedSheet ? (
+          <div className="space-y-6">
+            <div className="border-b pb-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold">{selectedSheet.title}</h2>
+                  {selectedSheet.description && (
+                    <p className="text-muted-foreground mt-1">{selectedSheet.description}</p>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary">{selectedSheet.category}</Badge>
+                  <Link to={`/edit/${selectedSheet.id}`}>
+                    <Button size="sm" variant="outline" className="gap-2">
+                      <Edit className="h-4 w-4" />
+                      Edit
+                    </Button>
+                  </Link>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => handleExportPDF(selectedSheet)}
+                    className="gap-2"
+                  >
+                    <Download className="h-4 w-4" />
+                    Export PDF
+                  </Button>
+                </div>
+              </div>
+            </div>
+            {renderContentPreview(selectedSheet)}
+          </div>
+        ) : isLoading ? (
           <div className="text-center py-8">Loading your cheat sheets...</div>
         ) : cheatSheets.length === 0 ? (
           <div className="text-center py-12">
@@ -139,6 +241,16 @@ const Index = () => {
                       Updated {sheet.updatedAt.toLocaleDateString()}
                     </div>
                     <div className="flex items-center gap-2">
+                      <Button 
+                        size="sm" 
+                        variant="ghost"
+                        onClick={() => {
+                          setSelectedSheet(sheet);
+                          setViewMode('preview');
+                        }}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
                       <Link to={`/edit/${sheet.id}`}>
                         <Button size="sm" variant="ghost">
                           <Edit className="h-4 w-4" />
