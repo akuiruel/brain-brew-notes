@@ -1,58 +1,14 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { getStoredCheatSheets, deleteCheatSheet as deleteStoredCheatSheet } from '@/lib/storage';
-import Layout from '@/components/Layout';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Download, Trash2, Eye } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { exportToPDF } from '@/utils/pdfExport';
-import type { StoredCheatSheet } from '@/lib/storage';
-
-const Index = () => {
-  const { toast } = useToast();
-  const [cheatSheets, setCheatSheets] = useState<StoredCheatSheet[]>([]);
-  const [selectedSheet, setSelectedSheet] = useState<StoredCheatSheet | null>(null);
-  const [viewMode, setViewMode] = useState<'list' | 'preview'>('list');
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    fetchCheatSheets();
-  }, []);
-
-  const fetchCheatSheets = async () => {
-    try {
-      const sheets = getStoredCheatSheets();
-      // Sort by updatedAt desc
-      sheets.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
-      
-      setCheatSheets(sheets);
-    } catch (error) {
-      console.error('Error fetching cheat sheets:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch cheat sheets",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+import { useState } from 'react';
+import { useCheatSheets } from '@/hooks/useCheatSheets';
 
   const deleteCheatSheet = async (id: string) => {
     try {
-      const success = deleteStoredCheatSheet(id);
+      await deleteCheatSheetData(id);
       
-      if (success) {
-        setCheatSheets(prev => prev.filter(sheet => sheet.id !== id));
-        toast({
-          title: "Success",
-          description: "Cheat sheet deleted successfully",
-        });
-      } else {
-        throw new Error('Failed to delete cheat sheet');
-      }
+      toast({
+        title: "Success",
+        description: "Cheat sheet deleted successfully",
+      });
     } catch (error) {
       console.error('Error deleting cheat sheet:', error);
       toast({
@@ -63,7 +19,7 @@ const Index = () => {
     }
   };
 
-  const handleExportPDF = async (sheet: StoredCheatSheet) => {
+  const handleExportPDF = async (sheet: CheatSheetData) => {
     try {
       await exportToPDF({
         title: sheet.title,
@@ -85,7 +41,7 @@ const Index = () => {
   };
 
 
-  const renderContentPreview = (sheet: StoredCheatSheet) => {
+  const renderContentPreview = (sheet: CheatSheetData) => {
     if (!sheet.content?.items || sheet.content.items.length === 0) {
       return (
         <div className="text-center py-8 text-muted-foreground">
@@ -238,7 +194,7 @@ const Index = () => {
                 <CardContent>
                   <div className="flex items-center justify-between">
                     <div className="text-sm text-muted-foreground">
-                      Updated {sheet.updatedAt.toLocaleDateString()}
+                      Updated {new Date(sheet.updated_at || '').toLocaleDateString()}
                     </div>
                     <div className="flex items-center gap-2">
                       <Button 

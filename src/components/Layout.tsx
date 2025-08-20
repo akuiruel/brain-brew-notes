@@ -1,13 +1,46 @@
 import { ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, FileText } from 'lucide-react';
+import { Plus, FileText, Wifi, WifiOff } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 
 interface LayoutProps {
   children: ReactNode;
 }
 
 const Layout = ({ children }: LayoutProps) => {
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [isConnected, setIsConnected] = useState(false);
+
+  useEffect(() => {
+    // Check Supabase connection
+    const checkConnection = async () => {
+      try {
+        const { data, error } = await supabase.from('cheat_sheets').select('count').limit(1);
+        setIsConnected(!error);
+      } catch (error) {
+        setIsConnected(false);
+      }
+    };
+
+    checkConnection();
+
+    // Listen for online/offline events
+    const handleOnline = () => {
+      setIsOnline(true);
+      checkConnection();
+    };
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -29,6 +62,21 @@ const Layout = ({ children }: LayoutProps) => {
                 </Button>
               </Link>
             </nav>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 text-xs">
+              {isOnline && isConnected ? (
+                <>
+                  <Wifi className="h-3 w-3 text-green-500" />
+                  <span className="text-green-600">Synced</span>
+                </>
+              ) : (
+                <>
+                  <WifiOff className="h-3 w-3 text-red-500" />
+                  <span className="text-red-600">Offline</span>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </header>

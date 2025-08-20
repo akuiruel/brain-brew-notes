@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { saveCheatSheet } from '@/lib/storage';
+import { useCheatSheets } from '@/hooks/useCheatSheets';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,6 +18,7 @@ import type { ContentItem, CheatSheetCategory } from '@/integrations/firebase/ty
 const CreateCheatSheet = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { saveCheatSheet } = useCheatSheets();
   
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -69,15 +70,14 @@ const CreateCheatSheet = () => {
 
     try {
       const cheatSheetData = {
-        userId: 'anonymous',
         title: title.trim(),
         description: description.trim(),
         category: category as CheatSheetCategory,
         content: { items: contentItems },
-        isPublic: false,
+        is_public: false,
       };
 
-      saveCheatSheet(cheatSheetData);
+      await saveCheatSheet(cheatSheetData);
 
       toast({
         title: "Success",

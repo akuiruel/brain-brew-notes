@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getCheatSheetById, updateCheatSheet } from '@/lib/storage';
+import { useCheatSheets } from '@/hooks/useCheatSheets';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,6 +19,7 @@ const EditCheatSheet = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { toast } = useToast();
+  const { getCheatSheetById, updateCheatSheet } = useCheatSheets();
   
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -35,7 +36,7 @@ const EditCheatSheet = () => {
 
   const fetchCheatSheet = async () => {
     try {
-      const data = getCheatSheetById(id!);
+      const data = await getCheatSheetById(id!);
 
       if (!data) {
         toast({
@@ -115,23 +116,19 @@ const EditCheatSheet = () => {
     setIsLoading(true);
 
     try {
-      const success = updateCheatSheet(id!, {
+      await updateCheatSheet(id!, {
         title: title.trim(),
         description: description.trim(),
         category: category as CheatSheetCategory,
         content: { items: contentItems },
       });
 
-      if (success) {
-        toast({
-          title: "Success",
-          description: "Cheat sheet updated successfully!",
-        });
-        
-        navigate('/');
-      } else {
-        throw new Error('Failed to update cheat sheet');
-      }
+      toast({
+        title: "Success",
+        description: "Cheat sheet updated successfully!",
+      });
+      
+      navigate('/');
     } catch (error) {
       console.error('Error updating cheat sheet:', error);
       toast({
