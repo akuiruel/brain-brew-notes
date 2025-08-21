@@ -59,7 +59,7 @@ This project is built with:
 - React
 - shadcn-ui
 - Tailwind CSS
-- Firebase/Firestore
+- Firebase/Firestore (migrated from Supabase)
 
 ## How can I deploy this project?
 

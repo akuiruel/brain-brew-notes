@@ -7,8 +7,8 @@ export interface CheatSheet {
   category: CheatSheetCategory;
   content: CheatSheetContent;
   isPublic: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Date | FirebaseFirestore.Timestamp;
+  updatedAt: Date | FirebaseFirestore.Timestamp;
 }
 
 export interface CheatSheetContent {

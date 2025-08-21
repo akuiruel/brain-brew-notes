@@ -3,7 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Plus, FileText, Wifi, WifiOff } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/firebase';
+import { collection, limit, getDocs } from 'firebase/firestore';
 
 interface LayoutProps {
   children: ReactNode;
@@ -14,11 +15,11 @@ const Layout = ({ children }: LayoutProps) => {
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    // Check Supabase connection
+    // Check Firestore connection
     const checkConnection = async () => {
       try {
-        const { data, error } = await supabase.from('cheat_sheets').select('count').limit(1);
-        setIsConnected(!error);
+        await getDocs(collection(db, 'cheatSheets'));
+        setIsConnected(true);
       } catch (error) {
         setIsConnected(false);
       }

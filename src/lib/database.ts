@@ -1,149 +1,188 @@
-import { supabase } from './supabase';
+import { 
+  collection, 
+  doc, 
+  getDocs, 
+  addDoc, 
+  updateDoc, 
+  deleteDoc, 
+  getDoc,
+  query,
+  where,
+  orderBy,
+  serverTimestamp,
+  Timestamp
+} from 'firebase/firestore';
+import { 
+  signInAnonymously, 
+  onAuthStateChanged, 
+  User 
+} from 'firebase/auth';
+import { db, auth } from './firebase';
 import type { ContentItem, CheatSheetCategory } from '@/integrations/firebase/types';
 
 export interface CheatSheetData {
   id?: string;
-  user_id?: string;
+  userId?: string;
   title: string;
   description?: string;
   category: CheatSheetCategory;
   content: {
     items: ContentItem[];
   };
-  is_public?: boolean;
-  created_at?: string;
-  updated_at?: string;
+  isPublic?: boolean;
+  createdAt?: Date | Timestamp;
+  updatedAt?: Date | Timestamp;
 }
 
 // Get current user session
-export const getCurrentUser = async () => {
-  const { data: { user } } = await supabase.auth.getUser();
-  return user;
+export const getCurrentUser = (): Promise<User | null> => {
+  return new Promise((resolve) => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      unsubscribe();
+      resolve(user);
+    });
+  });
 };
 
 // Create anonymous session if no user is logged in
-export const ensureAnonymousSession = async () => {
-  const { data: { user } } = await supabase.auth.getUser();
+export const ensureAnonymousSession = async (): Promise<User> => {
+  const user = await getCurrentUser();
   
   if (!user) {
     // Sign in anonymously
-    const { data, error } = await supabase.auth.signInAnonymously();
-    if (error) {
-      console.error('Error creating anonymous session:', error);
-      throw error;
+    const { user: anonymousUser } = await signInAnonymously(auth);
+    if (!anonymousUser) {
+      throw new Error('Failed to create anonymous session');
     }
-    return data.user;
+    return anonymousUser;
   }
   
   return user;
+};
+
+// Convert Firestore document to CheatSheetData
+const convertFirestoreDoc = (doc: any): CheatSheetData => {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    userId: data.userId,
+    title: data.title,
+    description: data.description,
+    category: data.category,
+    content: data.content,
+    isPublic: data.isPublic || false,
+    createdAt: data.createdAt?.toDate() || new Date(),
+    updatedAt: data.updatedAt?.toDate() || new Date(),
+  };
 };
 
 // Fetch all cheat sheets for current user
 export const fetchCheatSheets = async (): Promise<CheatSheetData[]> => {
   const user = await ensureAnonymousSession();
   
-  const { data, error } = await supabase
-    .from('cheat_sheets')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('updated_at', { ascending: false });
-
-  if (error) {
-    console.error('Error fetching cheat sheets:', error);
-    throw error;
-  }
-
-  return data || [];
+  const q = query(
+    collection(db, 'cheatSheets'),
+    where('userId', '==', user.uid),
+    orderBy('updatedAt', 'desc')
+  );
+  
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.docs.map(convertFirestoreDoc);
 };
 
 // Create a new cheat sheet
-export const createCheatSheet = async (cheatSheetData: Omit<CheatSheetData, 'id' | 'user_id' | 'created_at' | 'updated_at'>): Promise<CheatSheetData> => {
+export const createCheatSheet = async (cheatSheetData: Omit<CheatSheetData, 'id' | 'userId' | 'createdAt' | 'updatedAt'>): Promise<CheatSheetData> => {
   const user = await ensureAnonymousSession();
 
-  const { data, error } = await supabase
-    .from('cheat_sheets')
-    .insert({
-      user_id: user.id,
-      title: cheatSheetData.title,
-      description: cheatSheetData.description,
-      category: cheatSheetData.category,
-      content: cheatSheetData.content,
-      is_public: cheatSheetData.is_public || false,
-    })
-    .select()
-    .single();
+  const docData = {
+    userId: user.uid,
+    title: cheatSheetData.title,
+    description: cheatSheetData.description,
+    category: cheatSheetData.category,
+    content: cheatSheetData.content,
+    isPublic: cheatSheetData.isPublic || false,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  };
 
-  if (error) {
-    console.error('Error creating cheat sheet:', error);
-    throw error;
-  }
-
-  return data;
+  const docRef = await addDoc(collection(db, 'cheatSheets'), docData);
+  
+  // Get the created document to return with proper timestamps
+  const createdDoc = await getDoc(docRef);
+  return convertFirestoreDoc(createdDoc);
 };
 
 // Update an existing cheat sheet
-export const updateCheatSheet = async (id: string, updates: Partial<Omit<CheatSheetData, 'id' | 'user_id' | 'created_at'>>): Promise<CheatSheetData> => {
+export const updateCheatSheet = async (id: string, updates: Partial<Omit<CheatSheetData, 'id' | 'userId' | 'createdAt'>>): Promise<CheatSheetData> => {
   const user = await ensureAnonymousSession();
-
-  const { data, error } = await supabase
-    .from('cheat_sheets')
-    .update(updates)
-    .eq('id', id)
-    .eq('user_id', user.id)
-    .select()
-    .single();
-
-  if (error) {
-    console.error('Error updating cheat sheet:', error);
-    throw error;
+  
+  const docRef = doc(db, 'cheatSheets', id);
+  
+  // Verify ownership
+  const docSnap = await getDoc(docRef);
+  if (!docSnap.exists()) {
+    throw new Error('Cheat sheet not found');
+  }
+  
+  const data = docSnap.data();
+  if (data.userId !== user.uid) {
+    throw new Error('Unauthorized: You can only update your own cheat sheets');
   }
 
-  return data;
+  const updateData = {
+    ...updates,
+    updatedAt: serverTimestamp(),
+  };
+
+  await updateDoc(docRef, updateData);
+  
+  // Get the updated document
+  const updatedDoc = await getDoc(docRef);
+  return convertFirestoreDoc(updatedDoc);
 };
 
 // Delete a cheat sheet
 export const deleteCheatSheet = async (id: string): Promise<boolean> => {
   const user = await ensureAnonymousSession();
-
-  const { error } = await supabase
-    .from('cheat_sheets')
-    .delete()
-    .eq('id', id)
-    .eq('user_id', user.id);
-
-  if (error) {
-    console.error('Error deleting cheat sheet:', error);
-    throw error;
+  
+  const docRef = doc(db, 'cheatSheets', id);
+  
+  // Verify ownership
+  const docSnap = await getDoc(docRef);
+  if (!docSnap.exists()) {
+    throw new Error('Cheat sheet not found');
+  }
+  
+  const data = docSnap.data();
+  if (data.userId !== user.uid) {
+    throw new Error('Unauthorized: You can only delete your own cheat sheets');
   }
 
+  await deleteDoc(docRef);
   return true;
 };
 
 // Get a single cheat sheet by ID
 export const getCheatSheetById = async (id: string): Promise<CheatSheetData | null> => {
   const user = await ensureAnonymousSession();
-
-  const { data, error } = await supabase
-    .from('cheat_sheets')
-    .select('*')
-    .eq('id', id)
-    .eq('user_id', user.id)
-    .single();
-
-  if (error) {
-    if (error.code === 'PGRST116') {
-      // No rows returned
-      return null;
-    }
-    console.error('Error fetching cheat sheet:', error);
-    throw error;
+  
+  const docRef = doc(db, 'cheatSheets', id);
+  const docSnap = await getDoc(docRef);
+  
+  if (!docSnap.exists()) {
+    return null;
   }
-
-  return data;
+  
+  const data = docSnap.data();
+  if (data.userId !== user.uid) {
+    throw new Error('Unauthorized: You can only access your own cheat sheets');
+  }
+  
+  return convertFirestoreDoc(docSnap);
 };
 
-// Migrate existing localStorage data to Supabase
-export const migrateLocalStorageToSupabase = async () => {
+// Migrate existing localStorage data to Firestore
+export const migrateLocalStorageToFirestore = async () => {
   try {
     const localData = localStorage.getItem('cheatsheets');
     if (!localData) return;
@@ -153,16 +192,16 @@ export const migrateLocalStorageToSupabase = async () => {
 
     for (const sheet of sheets) {
       try {
-        await supabase
-          .from('cheat_sheets')
-          .insert({
-            user_id: user.id,
-            title: sheet.title,
-            description: sheet.description,
-            category: sheet.category,
-            content: sheet.content,
-            is_public: sheet.isPublic || false,
-          });
+        await addDoc(collection(db, 'cheatSheets'), {
+          userId: user.uid,
+          title: sheet.title,
+          description: sheet.description,
+          category: sheet.category,
+          content: sheet.content,
+          isPublic: sheet.isPublic || false,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
       } catch (error) {
         console.error('Error migrating sheet:', sheet.title, error);
       }
@@ -170,7 +209,7 @@ export const migrateLocalStorageToSupabase = async () => {
 
     // Clear localStorage after successful migration
     localStorage.removeItem('cheatsheets');
-    console.log('Successfully migrated localStorage data to Supabase');
+    console.log('Successfully migrated localStorage data to Firestore');
   } catch (error) {
     console.error('Error during migration:', error);
   }

@@ -102,8 +102,8 @@ export const mergeCheatSheets = (onlineSheets: CheatSheetData[], offlineSheets: 
   
   // Sort by updated_at
   return merged.sort((a, b) => {
-    const dateA = new Date(a.updated_at || 0).getTime();
-    const dateB = new Date(b.updated_at || 0).getTime();
+    const dateA = a.updatedAt ? (a.updatedAt instanceof Date ? a.updatedAt : a.updatedAt.toDate()).getTime() : 0;
+    const dateB = b.updatedAt ? (b.updatedAt instanceof Date ? b.updatedAt : b.updatedAt.toDate()).getTime() : 0;
     return dateB - dateA;
   });
 };

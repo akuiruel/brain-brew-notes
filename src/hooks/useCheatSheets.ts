@@ -135,9 +135,9 @@ export const useCheatSheets = () => {
         const offlineSheet: CheatSheetData = {
           ...data,
           id: crypto.randomUUID(),
-          user_id: 'offline',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+          userId: 'offline',
+          createdAt: new Date(),
+          updatedAt: new Date(),
         };
         
         saveOfflineCheatSheet(offlineSheet);
@@ -176,7 +176,7 @@ export const useCheatSheets = () => {
         const offlineSheets = getOfflineCheatSheets();
         const updatedSheets = offlineSheets.map(sheet => 
           sheet.id === id 
-            ? { ...sheet, ...updates, updated_at: new Date().toISOString(), needsSync: true }
+            ? { ...sheet, ...updates, updatedAt: new Date(), needsSync: true }
             : sheet
         );
         
@@ -191,7 +191,7 @@ export const useCheatSheets = () => {
         setCheatSheets(prev => 
           prev.map(sheet => 
             sheet.id === id 
-              ? { ...sheet, ...updates, updated_at: new Date().toISOString() }
+              ? { ...sheet, ...updates, updatedAt: new Date() }
               : sheet
           )
         );
