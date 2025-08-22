@@ -77,6 +77,7 @@ const CreateCheatSheet = () => {
         isPublic: false,
       };
 
+      console.log('Saving cheat sheet data:', cheatSheetData);
       await saveCheatSheet(cheatSheetData);
 
       toast({
@@ -87,9 +88,22 @@ const CreateCheatSheet = () => {
       navigate('/');
     } catch (error) {
       console.error('Error creating cheat sheet:', error);
+      
+      // More detailed error message
+      let errorMessage = 'Failed to create cheat sheet';
+      if (error instanceof Error) {
+        if (error.message.includes('permission-denied')) {
+          errorMessage = 'Permission denied. Please check if you are signed in and have the correct permissions.';
+        } else if (error.message.includes('network-request-failed')) {
+          errorMessage = 'Network error. Please check your internet connection.';
+        } else if (error.message) {
+          errorMessage = `Error: ${error.message}`;
+        }
+      }
+      
       toast({
         title: "Error",
-        description: "Failed to create cheat sheet",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

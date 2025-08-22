@@ -79,37 +79,79 @@ const convertFirestoreDoc = (doc: any): CheatSheetData => {
 // Fetch all cheat sheets for current user
 export const fetchCheatSheets = async (): Promise<CheatSheetData[]> => {
   const user = await ensureAnonymousSession();
-  
-  const q = query(
-    collection(db, 'cheatSheets'),
-    where('userId', '==', user.uid),
-    orderBy('updatedAt', 'desc')
-  );
-  
-  const querySnapshot = await getDocs(q);
-  return querySnapshot.docs.map(convertFirestoreDoc);
+  try {
+    // Primary query: filter by userId and order by updatedAt desc
+    const q = query(
+      collection(db, 'cheatSheets'),
+      where('userId', '==', user.uid),
+      orderBy('updatedAt', 'desc')
+    );
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(convertFirestoreDoc);
+  } catch (err: any) {
+    // If composite index is missing, Firestore can throw FAILED_PRECONDITION
+    const code = err?.code || err?.name || '';
+    if (typeof code === 'string' && code.toLowerCase().includes('failed-precondition')) {
+      console.warn('[fetchCheatSheets] Missing composite index for (userId, updatedAt). Falling back to client-side sort. Consider creating a Firestore composite index: cheatSheets: where userId ==, orderBy updatedAt desc');
+      const fallbackQ = query(
+        collection(db, 'cheatSheets'),
+        where('userId', '==', user.uid)
+      );
+      const fallbackSnap = await getDocs(fallbackQ);
+      const items = fallbackSnap.docs.map(convertFirestoreDoc);
+      // Client-side sort by updatedAt (handles Date or Timestamp converted to Date)
+      return items.sort((a, b) => {
+        const ta = a.updatedAt instanceof Date ? a.updatedAt.getTime() : (a.updatedAt as any)?.toMillis?.() ?? 0;
+        const tb = b.updatedAt instanceof Date ? b.updatedAt.getTime() : (b.updatedAt as any)?.toMillis?.() ?? 0;
+        return tb - ta;
+      });
+    }
+    console.error('[fetchCheatSheets] Unexpected error:', err);
+    throw err;
+  }
 };
 
 // Create a new cheat sheet
 export const createCheatSheet = async (cheatSheetData: Omit<CheatSheetData, 'id' | 'userId' | 'createdAt' | 'updatedAt'>): Promise<CheatSheetData> => {
-  const user = await ensureAnonymousSession();
+  try {
+    console.log('Starting createCheatSheet with data:', cheatSheetData);
+    const user = await ensureAnonymousSession();
+    console.log('User session ensured:', user.uid);
 
-  const docData = {
-    userId: user.uid,
-    title: cheatSheetData.title,
-    description: cheatSheetData.description,
-    category: cheatSheetData.category,
-    content: cheatSheetData.content,
-    isPublic: cheatSheetData.isPublic || false,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  };
+    const docData = {
+      userId: user.uid,
+      title: cheatSheetData.title,
+      description: cheatSheetData.description,
+      category: cheatSheetData.category,
+      content: cheatSheetData.content,
+      isPublic: cheatSheetData.isPublic || false,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
 
-  const docRef = await addDoc(collection(db, 'cheatSheets'), docData);
-  
-  // Get the created document to return with proper timestamps
-  const createdDoc = await getDoc(docRef);
-  return convertFirestoreDoc(createdDoc);
+    console.log('Attempting to add document to Firestore with data:', docData);
+    const docRef = await addDoc(collection(db, 'cheatSheets'), docData);
+    console.log('Document added with ID:', docRef.id);
+    
+    // Get the created document to return with proper timestamps
+    const createdDoc = await getDoc(docRef);
+    if (!createdDoc.exists()) {
+      throw new Error('Failed to retrieve created document');
+    }
+    
+    const result = convertFirestoreDoc(createdDoc);
+    console.log('Successfully created cheat sheet:', result);
+    return result;
+  } catch (error) {
+    console.error('Error in createCheatSheet:', {
+      error,
+      errorMessage: error instanceof Error ? error.message : 'Unknown error',
+      errorName: error instanceof Error ? error.name : 'Unknown',
+      stack: error instanceof Error ? error.stack : undefined,
+      cheatSheetData
+    });
+    throw error; // Re-throw to be handled by the caller
+  }
 };
 
 // Update an existing cheat sheet
