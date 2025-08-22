@@ -5,7 +5,8 @@ import {
   createCheatSheet, 
   updateCheatSheet, 
   deleteCheatSheet,
-  migrateLocalStorageToSupabase 
+  getCheatSheetById,
+  migrateLocalStorageToFirestore 
 } from '@/lib/database';
 import { 
   getOfflineCheatSheets, 
@@ -17,7 +18,6 @@ import {
   clearSyncQueue
 } from '@/lib/offlineStorage';
 import type { CheatSheetData } from '@/lib/database';
-import type { ContentItem, CheatSheetCategory } from '@/integrations/firebase/types';
 
 export const useCheatSheets = () => {
   const [cheatSheets, setCheatSheets] = useState<CheatSheetData[]>([]);
@@ -48,7 +48,7 @@ export const useCheatSheets = () => {
     try {
       if (isOnline) {
         // Migrate localStorage data if exists
-        await migrateLocalStorageToSupabase();
+        await migrateLocalStorageToFirestore();
         // Sync any pending changes
         await syncData();
         // Fetch latest data
@@ -124,7 +124,7 @@ export const useCheatSheets = () => {
     }
   };
 
-  const saveCheatSheet = async (data: Omit<CheatSheetData, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
+  const saveCheatSheet = async (data: Omit<CheatSheetData, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => {
     try {
       if (isOnline) {
         const newSheet = await createCheatSheet(data);

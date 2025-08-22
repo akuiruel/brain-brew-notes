@@ -4,7 +4,7 @@ import { Plus, FileText, Wifi, WifiOff } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { db } from '@/lib/firebase';
-import { collection, limit, getDocs } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 
 interface LayoutProps {
   children: ReactNode;

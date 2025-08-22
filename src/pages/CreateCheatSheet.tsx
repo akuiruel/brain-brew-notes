@@ -74,7 +74,7 @@ const CreateCheatSheet = () => {
         description: description.trim(),
         category: category as CheatSheetCategory,
         content: { items: contentItems },
-        is_public: false,
+        isPublic: false,
       };
 
       await saveCheatSheet(cheatSheetData);
