@@ -14,7 +14,22 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Save, Plus, Trash2 } from 'lucide-react';
 import type { ContentItem, CheatSheetCategory } from '@/integrations/firebase/types';
+import { DndContext, closestCenter, type DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy, arrayMove, useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
+function SortableItem({ id, children }: { id: string; children: React.ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  } as React.CSSProperties;
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      {children}
+    </div>
+  );
+}
 const CreateCheatSheet = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -25,6 +40,16 @@ const CreateCheatSheet = () => {
   const [category, setCategory] = useState<CheatSheetCategory | ''>('');
   const [contentItems, setContentItems] = useState<ContentItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const displayItems = [...contentItems].slice().reverse();
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = displayItems.findIndex((i) => i.id === active.id);
+    const newIndex = displayItems.findIndex((i) => i.id === over.id);
+    const newDisplay = arrayMove(displayItems, oldIndex, newIndex);
+    const newContent = newDisplay.slice().reverse();
+    setContentItems(newContent);
+  };
 
   if (!isOnline) {
     return <Layout><div /></Layout>;
@@ -37,6 +62,7 @@ const CreateCheatSheet = () => {
       title: '',
       color: '#000000',
     };
+    // Append to keep chronological order; UI shows reversed so it appears at top
     setContentItems(prev => [...prev, newItem]);
   };
 
@@ -215,9 +241,12 @@ const CreateCheatSheet = () => {
                     No content added yet. Use the buttons on the left to add content.
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {contentItems.map((item, index) => (
-                      <Card key={item.id} className="relative">
+                  <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                    <SortableContext items={displayItems.map(i => i.id)} strategy={verticalListSortingStrategy}>
+                      <div className="space-y-4">
+                        {displayItems.map((item, index) => (
+                          <SortableItem key={item.id} id={item.id}>
+                            <Card className="relative">
                         <CardHeader>
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
@@ -346,9 +375,12 @@ const CreateCheatSheet = () => {
                             </div>
                           )}
                         </CardContent>
-                      </Card>
-                    ))}
-                  </div>
+                            </Card>
+                          </SortableItem>
+                        ))}
+                      </div>
+                    </SortableContext>
+                  </DndContext>
                 )}
               </CardContent>
             </Card>
