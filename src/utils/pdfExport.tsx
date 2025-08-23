@@ -28,8 +28,8 @@ const styles = StyleSheet.create({
   header: {
     marginBottom: 25,
     padding: 25,
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    backgroundColor: '#667eea',
+
+    backgroundColor: '#2563eb',
     borderRadius: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
   },
   category: {
     fontSize: 11,
-    backgroundColor: '#4c1d95',
+    backgroundColor: '#1e3a8a',
     color: '#ffffff',
     padding: 6,
     paddingHorizontal: 12,
@@ -75,18 +75,20 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: 'bold',
     marginBottom: 10,
-    color: '#1e293b',
-    backgroundColor: '#f1f5f9',
+    color: '#0f172a',
+    backgroundColor: '#eff6ff',
     padding: 12,
     paddingHorizontal: 16,
     borderRadius: 8,
-    borderLeft: '4 solid #667eea',
+    borderLeftWidth: 4,
+    borderLeftColor: '#3b82f6',
   },
   contentBox: {
     backgroundColor: '#fefefe',
     padding: 16,
     borderRadius: 8,
-    border: '1 solid #e2e8f0',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
     marginTop: 5,
   },
   text: {
@@ -103,7 +105,8 @@ const styles = StyleSheet.create({
     lineHeight: 1.5,
     padding: 8,
     borderRadius: 6,
-    border: '1 solid #d1fae5',
+    borderWidth: 1,
+    borderColor: '#d1fae5',
   },
   math: {
     fontSize: 12,
@@ -112,12 +115,21 @@ const styles = StyleSheet.create({
     color: '#d97706',
     padding: 8,
     borderRadius: 6,
-    border: '1 solid #fed7aa',
+    borderWidth: 1,
+    borderColor: '#fed7aa',
   },
   pageBreak: {
     marginTop: 25,
-    borderTop: '2 solid #e5e7eb',
+    borderTopWidth: 2,
+    borderTopColor: '#e5e7eb',
     paddingTop: 25,
+  },
+  columnsContainer: {
+    flexDirection: 'row',
+  },
+  column: {
+    flex: 1,
+    paddingHorizontal: 6,
   },
 });
 
@@ -199,7 +211,7 @@ const renderMathToText = (latex: string): string => {
 
 const CheatSheetPDF = ({ data }: { data: CheatSheetData }) => {
   // Split content into chunks for better page management
-  const itemsPerPage = 6; // Adjust based on content density
+  const itemsPerPage = 18; // Adjust based on 3-column layout
   const pages: ContentItem[][] = [];
   
   for (let i = 0; i < data.content.items.length; i += itemsPerPage) {
@@ -228,63 +240,68 @@ const CheatSheetPDF = ({ data }: { data: CheatSheetData }) => {
             </View>
           )}
 
-          {pageItems.map((item, index) => (
-            <View key={item.id} style={styles.section} wrap={false}>
-              {item.title && (
-                <Text style={styles.sectionTitle}>{item.title}</Text>
-              )}
-              
-              <View style={styles.contentBox}>
-                {item.type === 'text' && (
-                  <View>
-                    {parseHtmlContent(item.content).map((segment, segIndex) => (
-                      <Text 
-                        key={segIndex}
-                        style={[
-                          styles.text, 
-                          { color: segment.color || item.color || '#000000' }
-                        ]}
-                      >
-                        {segment.text}
-                      </Text>
-                    ))}
-                  </View>
-                )}
-                
-                {item.type === 'math' && (
-                  <View>
-                    {parseHtmlContent(item.content).map((segment, segIndex) => (
-                      <Text 
-                        key={segIndex}
-                        style={[
-                          styles.math, 
-                          { color: segment.color || item.color || '#000000' }
-                        ]}
-                      >
-                        {segment.text}
-                      </Text>
-                    ))}
-                  </View>
-                )}
-                
-                {item.type === 'code' && (
-                  <View>
-                    {parseHtmlContent(item.content).map((segment, segIndex) => (
-                      <Text 
-                        key={segIndex}
-                        style={[
-                          styles.code, 
-                          { color: segment.color || item.color || '#000000' }
-                        ]}
-                      >
-                        {segment.text}
-                      </Text>
-                    ))}
-                  </View>
-                )}
+          <View style={styles.columnsContainer}>
+            {[0, 1, 2].map((col) => (
+              <View key={col} style={[styles.column, col > 0 ? { marginLeft: 12 } : {}]}>
+                {pageItems
+                  .filter((_, idx) => idx % 3 === col)
+                  .map((item) => (
+                    <View key={item.id} style={styles.section} wrap={false}>
+                      {item.title && (
+                        <Text style={styles.sectionTitle}>{item.title}</Text>
+                      )}
+                      <View style={styles.contentBox}>
+                        {item.type === 'text' && (
+                          <View>
+                            {parseHtmlContent(item.content).map((segment, segIndex) => (
+                              <Text
+                                key={segIndex}
+                                style={[
+                                  styles.text,
+                                  { color: segment.color || item.color || '#000000' },
+                                ]}
+                              >
+                                {segment.text}
+                              </Text>
+                            ))}
+                          </View>
+                        )}
+                        {item.type === 'math' && (
+                          <View>
+                            {parseHtmlContent(item.content).map((segment, segIndex) => (
+                              <Text
+                                key={segIndex}
+                                style={[
+                                  styles.math,
+                                  { color: segment.color || item.color || '#000000' },
+                                ]}
+                              >
+                                {segment.text}
+                              </Text>
+                            ))}
+                          </View>
+                        )}
+                        {item.type === 'code' && (
+                          <View>
+                            {parseHtmlContent(item.content).map((segment, segIndex) => (
+                              <Text
+                                key={segIndex}
+                                style={[
+                                  styles.code,
+                                  { color: segment.color || item.color || '#000000' },
+                                ]}
+                              >
+                                {segment.text}
+                              </Text>
+                            ))}
+                          </View>
+                        )}
+                      </View>
+                    </View>
+                  ))}
               </View>
-            </View>
-          ))}
+            ))}
+          </View>
         </Page>
       ))}
     </Document>
