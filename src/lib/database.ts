@@ -222,37 +222,3 @@ export const getCheatSheetById = async (id: string): Promise<CheatSheetData | nu
   
   return convertFirestoreDoc(docSnap);
 };
-
-// Migrate existing localStorage data to Firestore
-export const migrateLocalStorageToFirestore = async () => {
-  try {
-    const localData = localStorage.getItem('cheatsheets');
-    if (!localData) return;
-
-    const sheets = JSON.parse(localData);
-    const user = await ensureAnonymousSession();
-
-    for (const sheet of sheets) {
-      try {
-        await addDoc(collection(db, 'cheatSheets'), {
-          userId: user.uid,
-          title: sheet.title,
-          description: sheet.description,
-          category: sheet.category,
-          content: sheet.content,
-          isPublic: sheet.isPublic || false,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        });
-      } catch (error) {
-        console.error('Error migrating sheet:', sheet.title, error);
-      }
-    }
-
-    // Clear localStorage after successful migration
-    localStorage.removeItem('cheatsheets');
-    console.log('Successfully migrated localStorage data to Firestore');
-  } catch (error) {
-    console.error('Error during migration:', error);
-  }
-};
