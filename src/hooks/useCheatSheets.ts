@@ -6,7 +6,6 @@ import {
   updateCheatSheet, 
   deleteCheatSheet,
   getCheatSheetById,
-  migrateLocalStorageToFirestore 
 } from '@/lib/database';
 import type { CheatSheetData } from '@/lib/database';
 
@@ -54,8 +53,6 @@ export const useCheatSheets = () => {
     }
 
     try {
-      // Migrate localStorage data if exists
-      await migrateLocalStorageToFirestore();
       // Fetch latest data
       await loadCheatSheets();
     } catch (error) {
