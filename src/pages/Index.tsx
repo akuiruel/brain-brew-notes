@@ -15,7 +15,7 @@ import { exportToPDF } from '@/utils/pdfExport';
 import { format } from 'date-fns';
 
 const Index = () => {
-  const { cheatSheets, isLoading, deleteCheatSheet } = useCheatSheets();
+  const { cheatSheets, isLoading, isOnline, deleteCheatSheet } = useCheatSheets();
   const { toast } = useToast();
   const [selectedSheet, setSelectedSheet] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -94,6 +94,9 @@ const Index = () => {
     );
   }
 
+  if (!isOnline) {
+    return <Layout><div /></Layout>;
+  }
   if (viewMode === 'viewer' && selectedSheet) {
     return (
       <Layout>

@@ -18,7 +18,7 @@ import type { ContentItem, CheatSheetCategory } from '@/integrations/firebase/ty
 const CreateCheatSheet = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { saveCheatSheet } = useCheatSheets();
+  const { saveCheatSheet, isOnline } = useCheatSheets();
   
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -26,6 +26,9 @@ const CreateCheatSheet = () => {
   const [contentItems, setContentItems] = useState<ContentItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
+  if (!isOnline) {
+    return <Layout><div /></Layout>;
+  }
   const addContentItem = (type: 'text' | 'math' | 'code') => {
     const newItem: ContentItem = {
       id: crypto.randomUUID(),

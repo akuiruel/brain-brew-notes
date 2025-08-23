@@ -19,7 +19,7 @@ const EditCheatSheet = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { toast } = useToast();
-  const { getCheatSheetById, updateCheatSheet } = useCheatSheets();
+  const { getCheatSheetById, updateCheatSheet, isOnline } = useCheatSheets();
   
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -34,6 +34,9 @@ const EditCheatSheet = () => {
     }
   }, [id]);
 
+  if (!isOnline) {
+    return <Layout><div /></Layout>;
+  }
   const fetchCheatSheet = async () => {
     try {
       const data = await getCheatSheetById(id!);

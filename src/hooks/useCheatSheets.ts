@@ -8,15 +8,6 @@ import {
   getCheatSheetById,
   migrateLocalStorageToFirestore 
 } from '@/lib/database';
-import { 
-  getOfflineCheatSheets, 
-  saveOfflineCheatSheet, 
-  deleteOfflineCheatSheet,
-  mergeCheatSheets,
-  addToSyncQueue,
-  getSyncQueue,
-  clearSyncQueue
-} from '@/lib/offlineStorage';
 import type { CheatSheetData } from '@/lib/database';
 
 export const useCheatSheets = () => {
@@ -31,9 +22,16 @@ export const useCheatSheets = () => {
     // Listen for online/offline events
     const handleOnline = () => {
       setIsOnline(true);
-      syncData();
+      loadCheatSheets();
     };
-    const handleOffline = () => setIsOnline(false);
+    const handleOffline = () => {
+      setIsOnline(false);
+      toast({
+        title: "Connection Lost",
+        description: "You need an internet connection to use this app",
+        variant: "destructive",
+      });
+    };
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
@@ -45,118 +43,70 @@ export const useCheatSheets = () => {
   }, []);
 
   const initializeData = async () => {
+    if (!navigator.onLine) {
+      setIsLoading(false);
+      toast({
+        title: "No Internet Connection",
+        description: "Please connect to the internet to use this app",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      if (isOnline) {
-        // Migrate localStorage data if exists
-        await migrateLocalStorageToFirestore();
-        // Sync any pending changes
-        await syncData();
-        // Fetch latest data
-        await loadCheatSheets();
-      } else {
-        // Load offline data
-        const offlineSheets = getOfflineCheatSheets();
-        setCheatSheets(offlineSheets);
-      }
+      // Migrate localStorage data if exists
+      await migrateLocalStorageToFirestore();
+      // Fetch latest data
+      await loadCheatSheets();
     } catch (error) {
       console.error('Error initializing data:', error);
-      // Fallback to offline data
-      const offlineSheets = getOfflineCheatSheets();
-      setCheatSheets(offlineSheets);
+      toast({
+        title: "Error",
+        description: "Failed to load data. Please check your internet connection.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
   const loadCheatSheets = async () => {
+    if (!navigator.onLine) {
+      toast({
+        title: "No Internet Connection",
+        description: "Please connect to the internet to load your cheat sheets",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      if (isOnline) {
-        const onlineSheets = await fetchCheatSheets();
-        const offlineSheets = getOfflineCheatSheets();
-        const merged = mergeCheatSheets(onlineSheets, offlineSheets);
-        setCheatSheets(merged);
-      } else {
-        const offlineSheets = getOfflineCheatSheets();
-        setCheatSheets(offlineSheets);
-      }
+      const onlineSheets = await fetchCheatSheets();
+      setCheatSheets(onlineSheets);
     } catch (error) {
       console.error('Error loading cheat sheets:', error);
       toast({
         title: "Error",
-        description: "Failed to load cheat sheets",
+        description: "Failed to load cheat sheets. Please check your internet connection.",
         variant: "destructive",
       });
     }
   };
 
-  const syncData = async () => {
-    if (!isOnline) return;
-
-    try {
-      const syncQueue = getSyncQueue();
-      
-      for (const item of syncQueue) {
-        try {
-          switch (item.action) {
-            case 'create':
-              if (item.data) {
-                await createCheatSheet(item.data as any);
-              }
-              break;
-            case 'update':
-              if (item.data) {
-                await updateCheatSheet(item.id, item.data);
-              }
-              break;
-            case 'delete':
-              await deleteCheatSheet(item.id);
-              break;
-          }
-        } catch (error) {
-          console.error('Error syncing item:', item, error);
-        }
-      }
-      
-      clearSyncQueue();
-      await loadCheatSheets();
-    } catch (error) {
-      console.error('Error during sync:', error);
-    }
-  };
-
   const saveCheatSheet = async (data: Omit<CheatSheetData, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => {
+    if (!navigator.onLine) {
+      toast({
+        title: "No Internet Connection",
+        description: "Please connect to the internet to save your cheat sheet",
+        variant: "destructive",
+      });
+      throw new Error('No internet connection');
+    }
+
     try {
-      if (isOnline) {
-        const newSheet = await createCheatSheet(data);
-        setCheatSheets(prev => [newSheet, ...prev]);
-        return newSheet;
-      } else {
-        // Save offline
-        const offlineSheet: CheatSheetData = {
-          ...data,
-          id: crypto.randomUUID(),
-          userId: 'offline',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        };
-        
-        saveOfflineCheatSheet(offlineSheet);
-        addToSyncQueue({
-          id: offlineSheet.id!,
-          action: 'create',
-          data: offlineSheet,
-          timestamp: Date.now(),
-        });
-        
-        setCheatSheets(prev => [offlineSheet, ...prev]);
-        
-        toast({
-          title: "Saved Offline",
-          description: "Your cheat sheet will sync when you're back online",
-        });
-        
-        return offlineSheet;
-      }
+      const newSheet = await createCheatSheet(data);
+      setCheatSheets(prev => [newSheet, ...prev]);
+      return newSheet;
     } catch (error) {
       console.error('Error saving cheat sheet:', error);
       throw error;
@@ -164,43 +114,21 @@ export const useCheatSheets = () => {
   };
 
   const updateCheatSheetData = async (id: string, updates: Partial<CheatSheetData>) => {
+    if (!navigator.onLine) {
+      toast({
+        title: "No Internet Connection",
+        description: "Please connect to the internet to update your cheat sheet",
+        variant: "destructive",
+      });
+      throw new Error('No internet connection');
+    }
+
     try {
-      if (isOnline) {
-        const updatedSheet = await updateCheatSheet(id, updates);
-        setCheatSheets(prev => 
-          prev.map(sheet => sheet.id === id ? updatedSheet : sheet)
-        );
-        return updatedSheet;
-      } else {
-        // Update offline
-        const offlineSheets = getOfflineCheatSheets();
-        const updatedSheets = offlineSheets.map(sheet => 
-          sheet.id === id 
-            ? { ...sheet, ...updates, updatedAt: new Date(), needsSync: true }
-            : sheet
-        );
-        
-        localStorage.setItem('offline_cheatsheets', JSON.stringify(updatedSheets));
-        addToSyncQueue({
-          id,
-          action: 'update',
-          data: updates,
-          timestamp: Date.now(),
-        });
-        
-        setCheatSheets(prev => 
-          prev.map(sheet => 
-            sheet.id === id 
-              ? { ...sheet, ...updates, updatedAt: new Date() }
-              : sheet
-          )
-        );
-        
-        toast({
-          title: "Updated Offline",
-          description: "Changes will sync when you're back online",
-        });
-      }
+      const updatedSheet = await updateCheatSheet(id, updates);
+      setCheatSheets(prev => 
+        prev.map(sheet => sheet.id === id ? updatedSheet : sheet)
+      );
+      return updatedSheet;
     } catch (error) {
       console.error('Error updating cheat sheet:', error);
       throw error;
@@ -208,26 +136,18 @@ export const useCheatSheets = () => {
   };
 
   const deleteCheatSheetData = async (id: string) => {
+    if (!navigator.onLine) {
+      toast({
+        title: "No Internet Connection",
+        description: "Please connect to the internet to delete your cheat sheet",
+        variant: "destructive",
+      });
+      throw new Error('No internet connection');
+    }
+
     try {
-      if (isOnline) {
-        await deleteCheatSheet(id);
-        setCheatSheets(prev => prev.filter(sheet => sheet.id !== id));
-      } else {
-        // Delete offline
-        deleteOfflineCheatSheet(id);
-        addToSyncQueue({
-          id,
-          action: 'delete',
-          timestamp: Date.now(),
-        });
-        
-        setCheatSheets(prev => prev.filter(sheet => sheet.id !== id));
-        
-        toast({
-          title: "Deleted Offline",
-          description: "Deletion will sync when you're back online",
-        });
-      }
+      await deleteCheatSheet(id);
+      setCheatSheets(prev => prev.filter(sheet => sheet.id !== id));
     } catch (error) {
       console.error('Error deleting cheat sheet:', error);
       throw error;
@@ -235,13 +155,17 @@ export const useCheatSheets = () => {
   };
 
   const getCheatSheetByIdData = async (id: string): Promise<CheatSheetData | null> => {
+    if (!navigator.onLine) {
+      toast({
+        title: "No Internet Connection",
+        description: "Please connect to the internet to access your cheat sheet",
+        variant: "destructive",
+      });
+      return null;
+    }
+
     try {
-      if (isOnline) {
-        return await getCheatSheetById(id);
-      } else {
-        const offlineSheets = getOfflineCheatSheets();
-        return offlineSheets.find(sheet => sheet.id === id) || null;
-      }
+      return await getCheatSheetById(id);
     } catch (error) {
       console.error('Error getting cheat sheet:', error);
       return null;
@@ -257,6 +181,5 @@ export const useCheatSheets = () => {
     deleteCheatSheet: deleteCheatSheetData,
     getCheatSheetById: getCheatSheetByIdData,
     refreshCheatSheets: loadCheatSheets,
-    syncData,
   };
 };
