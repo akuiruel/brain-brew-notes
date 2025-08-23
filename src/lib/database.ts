@@ -80,34 +80,26 @@ const convertFirestoreDoc = (doc: any): CheatSheetData => {
 export const fetchCheatSheets = async (): Promise<CheatSheetData[]> => {
   const user = await ensureAnonymousSession();
   try {
-    // Primary query: filter by userId and order by updatedAt desc
+    // Primary query: get all cheatSheets ordered by updatedAt desc
     const q = query(
       collection(db, 'cheatSheets'),
-      where('userId', '==', user.uid),
       orderBy('updatedAt', 'desc')
     );
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(convertFirestoreDoc);
   } catch (err: any) {
-    // If composite index is missing, Firestore can throw FAILED_PRECONDITION
-    const code = err?.code || err?.name || '';
-    if (typeof code === 'string' && code.toLowerCase().includes('failed-precondition')) {
-      console.warn('[fetchCheatSheets] Missing composite index for (userId, updatedAt). Falling back to client-side sort. Consider creating a Firestore composite index: cheatSheets: where userId ==, orderBy updatedAt desc');
-      const fallbackQ = query(
-        collection(db, 'cheatSheets'),
-        where('userId', '==', user.uid)
-      );
-      const fallbackSnap = await getDocs(fallbackQ);
-      const items = fallbackSnap.docs.map(convertFirestoreDoc);
-      // Client-side sort by updatedAt (handles Date or Timestamp converted to Date)
-      return items.sort((a, b) => {
-        const ta = a.updatedAt instanceof Date ? a.updatedAt.getTime() : (a.updatedAt as any)?.toMillis?.() ?? 0;
-        const tb = b.updatedAt instanceof Date ? b.updatedAt.getTime() : (b.updatedAt as any)?.toMillis?.() ?? 0;
-        return tb - ta;
-      });
-    }
-    console.error('[fetchCheatSheets] Unexpected error:', err);
-    throw err;
+    // If index is missing, fall back to client-side sort
+    console.warn('[fetchCheatSheets] Falling back to client-side sort for updatedAt desc', err);
+    const fallbackQ = query(
+      collection(db, 'cheatSheets')
+    );
+    const fallbackSnap = await getDocs(fallbackQ);
+    const items = fallbackSnap.docs.map(convertFirestoreDoc);
+    return items.sort((a, b) => {
+      const ta = a.updatedAt instanceof Date ? a.updatedAt.getTime() : (a.updatedAt as any)?.toMillis?.() ?? 0;
+      const tb = b.updatedAt instanceof Date ? b.updatedAt.getTime() : (b.updatedAt as any)?.toMillis?.() ?? 0;
+      return tb - ta;
+    });
   }
 };
 
@@ -160,17 +152,7 @@ export const updateCheatSheet = async (id: string, updates: Partial<Omit<CheatSh
   
   const docRef = doc(db, 'cheatSheets', id);
   
-  // Verify ownership
-  const docSnap = await getDoc(docRef);
-  if (!docSnap.exists()) {
-    throw new Error('Cheat sheet not found');
-  }
-  
-  const data = docSnap.data();
-  if (data.userId !== user.uid) {
-    throw new Error('Unauthorized: You can only update your own cheat sheets');
-  }
-
+  // Remove strict ownership verification to allow cross-browser edits on same collection
   const updateData = {
     ...updates,
     updatedAt: serverTimestamp(),
@@ -189,17 +171,7 @@ export const deleteCheatSheet = async (id: string): Promise<boolean> => {
   
   const docRef = doc(db, 'cheatSheets', id);
   
-  // Verify ownership
-  const docSnap = await getDoc(docRef);
-  if (!docSnap.exists()) {
-    throw new Error('Cheat sheet not found');
-  }
-  
-  const data = docSnap.data();
-  if (data.userId !== user.uid) {
-    throw new Error('Unauthorized: You can only delete your own cheat sheets');
-  }
-
+  // Remove strict ownership verification to allow cross-browser deletes
   await deleteDoc(docRef);
   return true;
 };
@@ -213,11 +185,6 @@ export const getCheatSheetById = async (id: string): Promise<CheatSheetData | nu
   
   if (!docSnap.exists()) {
     return null;
-  }
-  
-  const data = docSnap.data();
-  if (data.userId !== user.uid) {
-    throw new Error('Unauthorized: You can only access your own cheat sheets');
   }
   
   return convertFirestoreDoc(docSnap);
