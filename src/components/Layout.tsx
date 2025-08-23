@@ -67,7 +67,7 @@ const Layout = ({ children }: LayoutProps) => {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-6">
             <Link to="/" className="flex items-center gap-2">
-              <FileText className="h-6 w-6" />
+              <FileText className="h-6 w-6 text-primary" />
               <h1 className="text-xl font-bold">CheatSheet App</h1>
             </Link>
             <nav className="flex items-center gap-4">
