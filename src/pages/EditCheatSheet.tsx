@@ -12,14 +12,183 @@ import MathRichTextEditor from '@/components/MathRichTextEditor';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Save, Plus, Trash2 } from 'lucide-react';
+import { Save, Plus, Trash2, ArrowUp, ArrowDown, GripVertical } from 'lucide-react';
 import type { ContentItem, CheatSheetCategory } from '@/integrations/firebase/types';
+import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { SortableContext, useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 const moveItem = <T,>(array: T[], fromIndex: number, toIndex: number): T[] => {
 	const newArray = array.slice();
 	const [moved] = newArray.splice(fromIndex, 1);
 	newArray.splice(toIndex, 0, moved);
 	return newArray;
+};
+
+const SortableItem = ({
+	item,
+	index,
+	length,
+	onRemove,
+	onMoveTo,
+	updateContentItem,
+}: {
+	item: ContentItem;
+	index: number;
+	length: number;
+	onRemove: (id: string) => void;
+	onMoveTo: (id: string, newPositionOneBased: number) => void;
+	updateContentItem: (id: string, updates: Partial<ContentItem>) => void;
+}) => {
+	const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: item.id });
+	const style: any = {
+		transform: CSS.Transform.toString(transform),
+		transition,
+	};
+	return (
+		<Card ref={setNodeRef as any} style={style} className="relative">
+			<CardHeader>
+				<div className="flex items-center justify-between">
+					<div className="flex items-center gap-2">
+						<Button size="icon" variant="ghost" className="cursor-grab" {...attributes} {...listeners}>
+							<GripVertical className="h-4 w-4" />
+						</Button>
+						<span className="text-sm font-medium">
+							{item.type === 'text' && 'Text'}
+							{item.type === 'math' && 'Math Formula'}
+							{item.type === 'code' && 'Code'}
+						</span>
+						<span className="text-xs text-muted-foreground">#{index + 1}</span>
+					</div>
+					<div className="flex items-center gap-2">
+						<Button size="sm" variant="outline" onClick={() => onMoveTo(item.id, Math.max(1, index))} disabled={index === 0}>
+							<ArrowUp className="h-4 w-4" />
+						</Button>
+						<Button size="sm" variant="outline" onClick={() => onMoveTo(item.id, Math.min(length, index + 2))} disabled={index === length - 1}>
+							<ArrowDown className="h-4 w-4" />
+						</Button>
+						<Select value={String(index + 1)} onValueChange={(v) => onMoveTo(item.id, parseInt(v, 10))}>
+							<SelectTrigger className="w-16">
+								<SelectValue placeholder="Pos" />
+							</SelectTrigger>
+							<SelectContent>
+								{Array.from({ length }).map((_, i) => (
+									<SelectItem key={i} value={String(i + 1)}>{i + 1}</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+						<Button size="sm" variant="ghost" onClick={() => onRemove(item.id)}>
+							<Trash2 className="h-4 w-4" />
+						</Button>
+					</div>
+				</div>
+			</CardHeader>
+			<CardContent className="space-y-4">
+				<div>
+					<Label>Title (optional)</Label>
+					<Input
+						value={item.title || ''}
+						onChange={(e) => updateContentItem(item.id, { title: e.target.value })}
+						placeholder="Enter section title"
+					/>
+				</div>
+				{item.type === 'text' && (
+					<div>
+						<Label>Content</Label>
+						<RichTextEditor
+							value={item.content}
+							onChange={(content) => updateContentItem(item.id, { content })}
+							placeholder="Enter text content with color formatting"
+							className="mt-2"
+						/>
+						<div className="mt-2 p-3 border rounded-md bg-muted/50">
+							<Label className="text-xs text-muted-foreground">Preview:</Label>
+							<Card className="mt-2 h-fit">
+								<CardHeader className="pb-2">
+									<Badge variant="outline" className="text-xs w-fit bg-blue-50 text-blue-700 border-blue-200">
+										📝 Text
+									</Badge>
+									{item.title && (
+										<CardTitle className="text-sm font-semibold">{item.title}</CardTitle>
+									)}
+								</CardHeader>
+								<CardContent className="pt-0">
+									<div 
+										className="prose prose-sm max-w-none text-foreground [&_p]:mb-2 [&_p]:leading-relaxed"
+										dangerouslySetInnerHTML={{ __html: item.content || "Type content to see preview..." }}
+									/>
+								</CardContent>
+							</Card>
+						</div>
+					</div>
+				)}
+				{item.type === 'math' && (
+					<div>
+						<Label>Content</Label>
+						<MathRichTextEditor
+							value={item.content}
+							onChange={(content) => updateContentItem(item.id, { content })}
+							placeholder="Enter math formulas and text..."
+							className="mt-2"
+						/>
+						<div className="mt-2 p-3 border rounded-md bg-muted/50">
+							<Label className="text-xs text-muted-foreground">Preview:</Label>
+							<Card className="mt-2 h-fit">
+								<CardHeader className="pb-2">
+									<Badge variant="outline" className="text-xs w-fit bg-amber-50 text-amber-700 border-amber-200">
+										🧮 Math
+									</Badge>
+									{item.title && (
+										<CardTitle className="text-sm font-semibold">{item.title}</CardTitle>
+									)}
+								</CardHeader>
+								<CardContent className="pt-0">
+									<div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 p-3 rounded-lg border border-amber-200 dark:border-amber-800">
+										<div 
+											className="prose prose-sm max-w-none text-foreground [&_p]:mb-2 [&_p]:leading-relaxed"
+											dangerouslySetInnerHTML={{ __html: item.content || "Type content to see preview..." }}
+										/>
+									</div>
+								</CardContent>
+							</Card>
+						</div>
+					</div>
+				)}
+				{item.type === 'code' && (
+					<div>
+						<Label>Content</Label>
+						<RichTextEditor
+							value={item.content}
+							onChange={(content) => updateContentItem(item.id, { content })}
+							placeholder="Enter code..."
+							className="mt-2"
+						/>
+						<div className="mt-2 p-3 border rounded-md bg-slate-950 text-green-400">
+							<Label className="text-xs text-slate-400">Preview:</Label>
+							<Card className="mt-2 h-fit bg-background">
+								<CardHeader className="pb-2">
+									<Badge variant="outline" className="text-xs w-fit bg-green-50 text-green-700 border-green-200">
+										💻 Code
+									</Badge>
+									{item.title && (
+										<CardTitle className="text-sm font-semibold">{item.title}</CardTitle>
+									)}
+								</CardHeader>
+								<CardContent className="pt-0">
+									<div className="bg-slate-950 text-green-400 p-3 rounded-lg border border-slate-700 font-mono text-sm">
+										<div 
+											className="[&_p]:mb-1 [&_p]:leading-relaxed [&_span]:text-green-400"
+											dangerouslySetInnerHTML={{ __html: item.content || "Type content to see preview..." }}
+										/>
+									</div>
+								</CardContent>
+							</Card>
+						</div>
+					</div>
+				)}
+			</CardContent>
+		</Card>
+	);
 };
 const EditCheatSheet = () => {
 	const navigate = useNavigate();
@@ -33,14 +202,13 @@ const EditCheatSheet = () => {
 	const [contentItems, setContentItems] = useState<ContentItem[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [isFetching, setIsFetching] = useState(true);
-	const displayItems = [...contentItems].slice().reverse();
+	const displayItems = contentItems;
 	const handlePositionChange = (id: string, newPositionOneBased: number) => {
 		const oldIndex = displayItems.findIndex((i) => i.id === id);
 		const newIndex = Math.max(0, Math.min(displayItems.length - 1, newPositionOneBased - 1));
 		if (oldIndex === -1 || oldIndex === newIndex) return;
 		const newDisplay = moveItem(displayItems, oldIndex, newIndex);
-		const newContent = newDisplay.slice().reverse();
-		setContentItems(newContent);
+		setContentItems(newDisplay);
 	};
 
 	useEffect(() => {
@@ -48,6 +216,20 @@ const EditCheatSheet = () => {
 			fetchCheatSheet();
 		}
 	}, [id]);
+
+	const sensors = useSensors(
+		useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+		useSensor(KeyboardSensor)
+	);
+
+	const handleDragEnd = (event: any) => {
+		const { active, over } = event;
+		if (!over || active.id === over.id) return;
+		const oldIndex = displayItems.findIndex((i) => i.id === active.id);
+		const newIndex = displayItems.findIndex((i) => i.id === over.id);
+		if (oldIndex === -1 || newIndex === -1) return;
+		setContentItems(moveItem(displayItems, oldIndex, newIndex));
+	};
 
 	if (!isOnline) {
 		return <Layout><div /></Layout>;
@@ -99,7 +281,6 @@ const EditCheatSheet = () => {
 			title: '',
 			color: '#000000',
 		};
-		// Append to keep chronological order; UI shows reversed so it appears at top
 		setContentItems(prev => [...prev, newItem]);
 	};
 
@@ -364,53 +545,26 @@ const EditCheatSheet = () => {
 									<div className="text-center py-8 text-muted-foreground">
 										No content added yet. Use the buttons on the left to add content.
 									</div>
-												) : (
+								) : (
 									<div className="space-y-4">
-										{displayItems.map((item, index) => (
-											<Card key={item.id} className="relative">
-												<CardHeader>
-													<div className="flex items-center justify-between">
-														<div className="flex items-center gap-2">
-															<span className="text-sm font-medium">
-																{item.type === 'text' && 'Text'}
-																{item.type === 'math' && 'Math Formula'}
-																{item.type === 'code' && 'Code'}
-															</span>
-															<span className="text-xs text-muted-foreground">#{index + 1}</span>
-														</div>
-														<div className="flex items-center gap-2">
-															<Select value={String(index + 1)} onValueChange={(v) => handlePositionChange(item.id, parseInt(v, 10))}>
-																<SelectTrigger className="w-16">
-																	<SelectValue placeholder="Pos" />
-																</SelectTrigger>
-																<SelectContent>
-																	{Array.from({ length: displayItems.length }).map((_, i) => (
-																		<SelectItem key={i} value={String(i + 1)}>{i + 1}</SelectItem>
-																	))}
-																</SelectContent>
-															</Select>
-															<Button size="sm" variant="ghost" onClick={() => removeContentItem(item.id)}>
-																<Trash2 className="h-4 w-4" />
-															</Button>
-														</div>
-													</div>
-												</CardHeader>
-												<CardContent className="space-y-4">
-													<div>
-														<Label>Title (optional)</Label>
-														<Input
-															value={item.title || ''}
-															onChange={(e) => updateContentItem(item.id, { title: e.target.value })}
-															placeholder="Enter section title"
-														/>
-													</div>
-																									{renderEditor(item)}
-											</CardContent>
-										</Card>
-									))}
-								</div>
-							)}
-						</CardContent>
+										<DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+											<SortableContext items={displayItems.map((i) => i.id)}>
+												{displayItems.map((item, index) => (
+													<SortableItem
+														key={item.id}
+														item={item}
+														index={index}
+														length={displayItems.length}
+														onRemove={removeContentItem}
+														onMoveTo={handlePositionChange}
+														updateContentItem={updateContentItem}
+													/>
+												))}
+											</SortableContext>
+										</DndContext>
+									</div>
+								)}
+							</CardContent>
 						</Card>
 					</div>
 				</div>
