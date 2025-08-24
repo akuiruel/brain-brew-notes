@@ -18,15 +18,15 @@ import { DndContext, closestCenter, type DragEndEvent, MouseSensor, TouchSensor,
 import { SortableContext, verticalListSortingStrategy, arrayMove, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-function SortableItem({ id, children }: { id: string; children: React.ReactNode }) {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
+function SortableItem({ id, children }: { id: string; children: (drag: { attributes: any; listeners: any; setActivatorNodeRef: (node: HTMLElement | null) => void; }) => React.ReactNode }) {
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition } = useSortable({ id });
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
   } as React.CSSProperties;
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      {children}
+    <div ref={setNodeRef} style={style}>
+      {children({ attributes, listeners, setActivatorNodeRef })}
     </div>
   );
 }
@@ -250,137 +250,147 @@ const CreateCheatSheet = () => {
                       <div className="space-y-4">
                         {displayItems.map((item, index) => (
                           <SortableItem key={item.id} id={item.id}>
-                            <Card className="relative">
-                          <CardHeader>
-                           <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                               <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" />
-                                <span className="text-sm font-medium">
-                                  {item.type === 'text' && 'Text'}
-                                  {item.type === 'math' && 'Math Formula'}
-                                  {item.type === 'code' && 'Code'}
-                                </span>
-                                <span className="text-xs text-muted-foreground">
-                                  #{index + 1}
-                                </span>
-                              </div>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => removeContentItem(item.id)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </CardHeader>
-                          <CardContent className="space-y-4">
-                            <div>
-                              <Label>Title (optional)</Label>
-                              <Input
-                                value={item.title || ''}
-                                onChange={(e) => updateContentItem(item.id, { title: e.target.value })}
-                                placeholder="Enter section title"
-                              />
-                            </div>
-                            
-                            {item.type === 'text' && (
-                              <div>
-                                <Label>Content</Label>
-                                <RichTextEditor
-                                  value={item.content}
-                                  onChange={(content) => updateContentItem(item.id, { content })}
-                                  placeholder="Enter text content with color formatting"
-                                  className="mt-2"
-                                />
-                                <div className="mt-2 p-3 border rounded-md bg-muted/50">
-                                  <Label className="text-xs text-muted-foreground">Preview:</Label>
-                                  <Card className="mt-2 h-fit">
-                                    <CardHeader className="pb-2">
-                                      <Badge variant="outline" className="text-xs w-fit bg-blue-50 text-blue-700 border-blue-200">
-                                        📝 Text
-                                      </Badge>
-                                      {item.title && (
-                                        <CardTitle className="text-sm font-semibold">{item.title}</CardTitle>
-                                      )}
-                                    </CardHeader>
-                                    <CardContent className="pt-0">
-                                      <div 
-                                        className="prose prose-sm max-w-none text-foreground [&_p]:mb-2 [&_p]:leading-relaxed"
-                                        dangerouslySetInnerHTML={{ __html: item.content || "Type content to see preview..." }}
+                            {({ attributes, listeners, setActivatorNodeRef }) => (
+                              <Card className="relative">
+                                <CardHeader>
+                                 <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      <button
+                                        aria-label="Drag handle"
+                                        className="cursor-grab active:cursor-grabbing touch-none select-none"
+                                        ref={setActivatorNodeRef}
+                                        {...attributes}
+                                        {...listeners}
+                                      >
+                                        <GripVertical className="h-4 w-4 text-muted-foreground" />
+                                      </button>
+                                      <span className="text-sm font-medium">
+                                        {item.type === 'text' && 'Text'}
+                                        {item.type === 'math' && 'Math Formula'}
+                                        {item.type === 'code' && 'Code'}
+                                      </span>
+                                      <span className="text-xs text-muted-foreground">
+                                        #{index + 1}
+                                      </span>
+                                    </div>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      onClick={() => removeContentItem(item.id)}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                  <div>
+                                    <Label>Title (optional)</Label>
+                                    <Input
+                                      value={item.title || ''}
+                                      onChange={(e) => updateContentItem(item.id, { title: e.target.value })}
+                                      placeholder="Enter section title"
+                                    />
+                                  </div>
+                                  
+                                  {item.type === 'text' && (
+                                    <div>
+                                      <Label>Content</Label>
+                                      <RichTextEditor
+                                        value={item.content}
+                                        onChange={(content) => updateContentItem(item.id, { content })}
+                                        placeholder="Enter text content with color formatting"
+                                        className="mt-2"
                                       />
-                                    </CardContent>
-                                  </Card>
-                                </div>
-                              </div>
-                            )}
-                            
-                            {item.type === 'math' && (
-                              <div>
-                                <Label>Content</Label>
-                                <MathRichTextEditor
-                                  value={item.content}
-                                  onChange={(content) => updateContentItem(item.id, { content })}
-                                  placeholder="Enter math formulas and text..."
-                                  className="mt-2"
-                                />
-                                <div className="mt-2 p-3 border rounded-md bg-muted/50">
-                                  <Label className="text-xs text-muted-foreground">Preview:</Label>
-                                  <Card className="mt-2 h-fit">
-                                    <CardHeader className="pb-2">
-                                      <Badge variant="outline" className="text-xs w-fit bg-amber-50 text-amber-700 border-amber-200">
-                                        🧮 Math
-                                      </Badge>
-                                      {item.title && (
-                                        <CardTitle className="text-sm font-semibold">{item.title}</CardTitle>
-                                      )}
-                                    </CardHeader>
-                                    <CardContent className="pt-0">
-                                      <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 p-3 rounded-lg border border-amber-200 dark:border-amber-800">
-                                        <div 
-                                          className="prose prose-sm max-w-none text-foreground [&_p]:mb-2 [&_p]:leading-relaxed"
-                                          dangerouslySetInnerHTML={{ __html: item.content || "Type content to see preview..." }}
-                                        />
+                                      <div className="mt-2 p-3 border rounded-md bg-muted/50">
+                                        <Label className="text-xs text-muted-foreground">Preview:</Label>
+                                        <Card className="mt-2 h-fit">
+                                          <CardHeader className="pb-2">
+                                            <Badge variant="outline" className="text-xs w-fit bg-blue-50 text-blue-700 border-blue-200">
+                                              📝 Text
+                                            </Badge>
+                                            {item.title && (
+                                              <CardTitle className="text-sm font-semibold">{item.title}</CardTitle>
+                                            )}
+                                          </CardHeader>
+                                          <CardContent className="pt-0">
+                                            <div 
+                                              className="prose prose-sm max-w-none text-foreground [&_p]:mb-2 [&_p]:leading-relaxed"
+                                              dangerouslySetInnerHTML={{ __html: item.content || "Type content to see preview..." }}
+                                            />
+                                          </CardContent>
+                                        </Card>
                                       </div>
-                                    </CardContent>
-                                  </Card>
-                                </div>
-                              </div>
-                            )}
-                            
-                            {item.type === 'code' && (
-                              <div>
-                                <Label>Content</Label>
-                                <RichTextEditor
-                                  value={item.content}
-                                  onChange={(content) => updateContentItem(item.id, { content })}
-                                  placeholder="Enter code..."
-                                  className="mt-2"
-                                />
-                                <div className="mt-2 p-3 border rounded-md bg-slate-950 text-green-400">
-                                  <Label className="text-xs text-slate-400">Preview:</Label>
-                                  <Card className="mt-2 h-fit bg-background">
-                                    <CardHeader className="pb-2">
-                                      <Badge variant="outline" className="text-xs w-fit bg-green-50 text-green-700 border-green-200">
-                                        💻 Code
-                                      </Badge>
-                                      {item.title && (
-                                        <CardTitle className="text-sm font-semibold">{item.title}</CardTitle>
-                                      )}
-                                    </CardHeader>
-                                    <CardContent className="pt-0">
-                                      <div className="bg-slate-950 text-green-400 p-3 rounded-lg border border-slate-700 font-mono text-sm">
-                                        <div 
-                                          className="[&_p]:mb-1 [&_p]:leading-relaxed [&_span]:text-green-400"
-                                          dangerouslySetInnerHTML={{ __html: item.content || "Type content to see preview..." }}
-                                        />
+                                    </div>
+                                  )}
+                                  
+                                  {item.type === 'math' && (
+                                    <div>
+                                      <Label>Content</Label>
+                                      <MathRichTextEditor
+                                        value={item.content}
+                                        onChange={(content) => updateContentItem(item.id, { content })}
+                                        placeholder="Enter math formulas and text..."
+                                        className="mt-2"
+                                      />
+                                      <div className="mt-2 p-3 border rounded-md bg-muted/50">
+                                        <Label className="text-xs text-muted-foreground">Preview:</Label>
+                                        <Card className="mt-2 h-fit">
+                                          <CardHeader className="pb-2">
+                                            <Badge variant="outline" className="text-xs w-fit bg-amber-50 text-amber-700 border-amber-200">
+                                              🧮 Math
+                                            </Badge>
+                                            {item.title && (
+                                              <CardTitle className="text-sm font-semibold">{item.title}</CardTitle>
+                                            )}
+                                          </CardHeader>
+                                          <CardContent className="pt-0">
+                                            <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 p-3 rounded-lg border border-amber-200 dark:border-amber-800">
+                                              <div 
+                                                className="prose prose-sm max-w-none text-foreground [&_p]:mb-2 [&_p]:leading-relaxed"
+                                                dangerouslySetInnerHTML={{ __html: item.content || "Type content to see preview..." }}
+                                              />
+                                            </div>
+                                          </CardContent>
+                                        </Card>
                                       </div>
-                                    </CardContent>
-                                  </Card>
-                                </div>
-                              </div>
+                                    </div>
+                                  )}
+                                  
+                                  {item.type === 'code' && (
+                                    <div>
+                                      <Label>Content</Label>
+                                      <RichTextEditor
+                                        value={item.content}
+                                        onChange={(content) => updateContentItem(item.id, { content })}
+                                        placeholder="Enter code..."
+                                        className="mt-2"
+                                      />
+                                      <div className="mt-2 p-3 border rounded-md bg-slate-950 text-green-400">
+                                        <Label className="text-xs text-slate-400">Preview:</Label>
+                                        <Card className="mt-2 h-fit bg-background">
+                                          <CardHeader className="pb-2">
+                                            <Badge variant="outline" className="text-xs w-fit bg-green-50 text-green-700 border-green-200">
+                                              💻 Code
+                                            </Badge>
+                                            {item.title && (
+                                              <CardTitle className="text-sm font-semibold">{item.title}</CardTitle>
+                                            )}
+                                          </CardHeader>
+                                          <CardContent className="pt-0">
+                                            <div className="bg-slate-950 text-green-400 p-3 rounded-lg border border-slate-700 font-mono text-sm">
+                                              <div 
+                                                className="[&_p]:mb-1 [&_p]:leading-relaxed [&_span]:text-green-400"
+                                                dangerouslySetInnerHTML={{ __html: item.content || "Type content to see preview..." }}
+                                              />
+                                            </div>
+                                          </CardContent>
+                                        </Card>
+                                      </div>
+                                    </div>
+                                  )}
+                                </CardContent>
+                              </Card>
                             )}
-                          </CardContent>
-                            </Card>
                           </SortableItem>
                         ))}
                       </div>
