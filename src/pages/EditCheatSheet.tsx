@@ -34,24 +34,11 @@ const EditCheatSheet = () => {
 	const [isLoading, setIsLoading] = useState(false);
 	const [isFetching, setIsFetching] = useState(true);
 	const displayItems = [...contentItems].slice().reverse();
-<<<<<<< HEAD
-	const sensors = useSensors(
-		useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
-		useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } })
-	);
-	const handleDragEnd = (event: DragEndEvent) => {
-		const { active, over } = event;
-		if (!over || active.id === over.id) return;
-		const oldIndex = displayItems.findIndex((i) => i.id === active.id);
-		const newIndex = displayItems.findIndex((i) => i.id === over.id);
-		const newDisplay = arrayMove(displayItems, oldIndex, newIndex);
-=======
 	const handlePositionChange = (id: string, newPositionOneBased: number) => {
 		const oldIndex = displayItems.findIndex((i) => i.id === id);
 		const newIndex = Math.max(0, Math.min(displayItems.length - 1, newPositionOneBased - 1));
 		if (oldIndex === -1 || oldIndex === newIndex) return;
 		const newDisplay = moveItem(displayItems, oldIndex, newIndex);
->>>>>>> cursor/ubah-urutan-konten-cheat-sheet-dengan-drag-and-drop-0f66
 		const newContent = newDisplay.slice().reverse();
 		setContentItems(newContent);
 	};
@@ -417,14 +404,13 @@ const EditCheatSheet = () => {
 															placeholder="Enter section title"
 														/>
 													</div>
-													{renderEditor(item)}
-												</CardContent>
-											</Card>
-										))}
-									</div>
-								)
-								)}
-							</CardContent>
+																									{renderEditor(item)}
+											</CardContent>
+										</Card>
+									))}
+								</div>
+							)}
+						</CardContent>
 						</Card>
 					</div>
 				</div>
