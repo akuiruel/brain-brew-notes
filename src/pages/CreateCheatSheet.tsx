@@ -371,7 +371,6 @@ const CreateCheatSheet = () => {
                       </Card>
                     ))}
                   </div>
-                )
                 )}
               </CardContent>
             </Card>
