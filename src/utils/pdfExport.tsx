@@ -18,6 +18,8 @@ interface CheatSheetData {
   };
 }
 
+export type PdfColumnCount = 2 | 3;
+
 const styles = StyleSheet.create({
   page: {
     flexDirection: 'column',
@@ -133,6 +135,21 @@ const styles = StyleSheet.create({
   },
 });
 
+const getPdfPalette = (category: string): { headerBg: string; badgeBg: string; accent: string } => {
+  switch (category) {
+    case 'mathematics':
+      return { headerBg: '#2563eb', badgeBg: '#1e3a8a', accent: '#3b82f6' };
+    case 'coding':
+      return { headerBg: '#059669', badgeBg: '#065f46', accent: '#10b981' };
+    case 'software':
+      return { headerBg: '#7c3aed', badgeBg: '#4c1d95', accent: '#a78bfa' };
+    case 'study':
+      return { headerBg: '#d97706', badgeBg: '#92400e', accent: '#f59e0b' };
+    default:
+      return { headerBg: '#334155', badgeBg: '#0f172a', accent: '#64748b' };
+  }
+};
+
 // Helper function to parse HTML and extract text with color information
 const parseHtmlContent = (html: string): Array<{ text: string; color?: string }> => {
   const segments: Array<{ text: string; color?: string }> = [];
@@ -181,7 +198,7 @@ const parseHtmlContent = (html: string): Array<{ text: string; color?: string }>
 // Helper function to strip HTML and preserve basic formatting  
 const stripHtml = (html: string): string => {
   return html
-    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<br\s*\/?>(?=.)/gi, '\n')
     .replace(/<\/p>/gi, '\n')
     .replace(/<p[^>]*>/gi, '')
     .replace(/<[^>]*>/g, '')
@@ -209,10 +226,11 @@ const renderMathToText = (latex: string): string => {
     .replace(/\\/g, '');
 };
 
-const CheatSheetPDF = ({ data }: { data: CheatSheetData }) => {
-  // Split content into chunks for better page management
-  const itemsPerPage = 18; // Adjust based on 3-column layout
+const CheatSheetPDF = ({ data, columns }: { data: CheatSheetData; columns: PdfColumnCount }) => {
+  // Determine items per page based on column count (approximate for layout balance)
+  const itemsPerPage = columns * 6;
   const pages: ContentItem[][] = [];
+  const palette = getPdfPalette(data.category);
   
   for (let i = 0; i < data.content.items.length; i += itemsPerPage) {
     pages.push(data.content.items.slice(i, i + itemsPerPage));
@@ -223,32 +241,32 @@ const CheatSheetPDF = ({ data }: { data: CheatSheetData }) => {
       {pages.map((pageItems, pageIndex) => (
         <Page key={pageIndex} size="A4" style={styles.page} wrap>
           {pageIndex === 0 && (
-            <View style={styles.header}>
+            <View style={[styles.header, { backgroundColor: palette.headerBg }]}>
               <Text style={styles.title}>{data.title}</Text>
               {data.description && (
                 <Text style={styles.description}>{data.description}</Text>
               )}
-              <Text style={styles.category}>{data.category.toUpperCase()}</Text>
+              <Text style={[styles.category, { backgroundColor: palette.badgeBg }]}>{data.category.toUpperCase()}</Text>
             </View>
           )}
 
           {pageIndex > 0 && (
             <View style={styles.pageBreak}>
-              <Text style={[styles.title, { color: '#1e3a8a', fontSize: 18 }]}>
+              <Text style={[styles.title, { color: palette.badgeBg, fontSize: 18 }]}>
                 {data.title} (continued)
               </Text>
             </View>
           )}
 
           <View style={styles.columnsContainer}>
-            {[0, 1, 2].map((col) => (
+            {Array.from({ length: columns }).map((_, col) => (
               <View key={col} style={[styles.column, col > 0 ? { marginLeft: 12 } : {}]}>
                 {pageItems
-                  .filter((_, idx) => idx % 3 === col)
+                  .filter((_, idx) => idx % columns === col)
                   .map((item) => (
                     <View key={item.id} style={styles.section} wrap={false}>
                       {item.title && (
-                        <Text style={styles.sectionTitle}>{item.title}</Text>
+                        <Text style={[styles.sectionTitle, { borderLeftColor: palette.accent }]}>{item.title}</Text>
                       )}
                       <View style={styles.contentBox}>
                         {item.type === 'text' && (
@@ -308,9 +326,10 @@ const CheatSheetPDF = ({ data }: { data: CheatSheetData }) => {
   );
 };
 
-export const exportToPDF = async (data: CheatSheetData): Promise<void> => {
+export const exportToPDF = async (data: CheatSheetData, options?: { columns?: PdfColumnCount }): Promise<void> => {
   try {
-    const blob = await pdf(<CheatSheetPDF data={data} />).toBlob();
+    const columns: PdfColumnCount = (options?.columns ?? 3) as PdfColumnCount;
+    const blob = await pdf(<CheatSheetPDF data={data} columns={columns} />).toBlob();
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
