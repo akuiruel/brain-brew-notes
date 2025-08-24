@@ -12,24 +12,15 @@ import MathRichTextEditor from '@/components/MathRichTextEditor';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Save, Plus, Trash2, GripVertical } from 'lucide-react';
+import { Save, Plus, Trash2 } from 'lucide-react';
 import type { ContentItem, CheatSheetCategory } from '@/integrations/firebase/types';
-import { DndContext, closestCenter, type DragEndEvent, MouseSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy, arrayMove, useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 
-function SortableItem({ id, children }: { id: string; children: (drag: { attributes: any; listeners: any; setActivatorNodeRef: (node: HTMLElement | null) => void; }) => React.ReactNode }) {
-	const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition } = useSortable({ id });
-	const style = {
-		transform: CSS.Transform.toString(transform),
-		transition,
-	} as React.CSSProperties;
-	return (
-		<div ref={setNodeRef} style={style}>
-			{children({ attributes, listeners, setActivatorNodeRef })}
-		</div>
-	);
-}
+const moveItem = <T,>(array: T[], fromIndex: number, toIndex: number): T[] => {
+	const newArray = array.slice();
+	const [moved] = newArray.splice(fromIndex, 1);
+	newArray.splice(toIndex, 0, moved);
+	return newArray;
+};
 const EditCheatSheet = () => {
 	const navigate = useNavigate();
 	const { id } = useParams();
@@ -43,6 +34,7 @@ const EditCheatSheet = () => {
 	const [isLoading, setIsLoading] = useState(false);
 	const [isFetching, setIsFetching] = useState(true);
 	const displayItems = [...contentItems].slice().reverse();
+<<<<<<< HEAD
 	const sensors = useSensors(
 		useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
 		useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } })
@@ -53,6 +45,13 @@ const EditCheatSheet = () => {
 		const oldIndex = displayItems.findIndex((i) => i.id === active.id);
 		const newIndex = displayItems.findIndex((i) => i.id === over.id);
 		const newDisplay = arrayMove(displayItems, oldIndex, newIndex);
+=======
+	const handlePositionChange = (id: string, newPositionOneBased: number) => {
+		const oldIndex = displayItems.findIndex((i) => i.id === id);
+		const newIndex = Math.max(0, Math.min(displayItems.length - 1, newPositionOneBased - 1));
+		if (oldIndex === -1 || oldIndex === newIndex) return;
+		const newDisplay = moveItem(displayItems, oldIndex, newIndex);
+>>>>>>> cursor/ubah-urutan-konten-cheat-sheet-dengan-drag-and-drop-0f66
 		const newContent = newDisplay.slice().reverse();
 		setContentItems(newContent);
 	};
@@ -378,62 +377,52 @@ const EditCheatSheet = () => {
 									<div className="text-center py-8 text-muted-foreground">
 										No content added yet. Use the buttons on the left to add content.
 									</div>
-								) : (
-									<DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd} sensors={sensors}>
-										<SortableContext items={displayItems.map(i => i.id)} strategy={verticalListSortingStrategy}>
-											<div className="space-y-4">
-												{displayItems.map((item, index) => (
-													<SortableItem key={item.id} id={item.id}>
-														{({ attributes, listeners, setActivatorNodeRef }) => (
-															<Card className="relative">
-																<CardHeader>
-																	<div className="flex items-center justify-between">
-																		<div className="flex items-center gap-2">
-																			<button
-																				aria-label="Drag handle"
-																				className="cursor-grab active:cursor-grabbing touch-none select-none"
-																				ref={setActivatorNodeRef}
-																				{...attributes}
-																				{...listeners}
-																			>
-																				<GripVertical className="h-4 w-4 text-muted-foreground" />
-																			</button>
-																			<span className="text-sm font-medium">
-																				{item.type === 'text' && 'Text'}
-																				{item.type === 'math' && 'Math Formula'}
-																				{item.type === 'code' && 'Code'}
-																			</span>
-																			<span className="text-xs text-muted-foreground">
-																				#{index + 1}
-																			</span>
-																		</div>
-																		<Button
-																			size="sm"
-																			variant="ghost"
-																			onClick={() => removeContentItem(item.id)}
-																		>
-																			<Trash2 className="h-4 w-4" />
-																		</Button>
-																	</div>
-																</CardHeader>
-																<CardContent className="space-y-4">
-																	<div>
-																		<Label>Title (optional)</Label>
-																		<Input
-																			value={item.title || ''}
-																			onChange={(e) => updateContentItem(item.id, { title: e.target.value })}
-																			placeholder="Enter section title"
-																		/>
-																	</div>
-																	{renderEditor(item)}
-																</CardContent>
-															</Card>
-														)}
-													</SortableItem>
-												))}
-											</div>
-										</SortableContext>
-									</DndContext>
+												) : (
+									<div className="space-y-4">
+										{displayItems.map((item, index) => (
+											<Card key={item.id} className="relative">
+												<CardHeader>
+													<div className="flex items-center justify-between">
+														<div className="flex items-center gap-2">
+															<span className="text-sm font-medium">
+																{item.type === 'text' && 'Text'}
+																{item.type === 'math' && 'Math Formula'}
+																{item.type === 'code' && 'Code'}
+															</span>
+															<span className="text-xs text-muted-foreground">#{index + 1}</span>
+														</div>
+														<div className="flex items-center gap-2">
+															<Select value={String(index + 1)} onValueChange={(v) => handlePositionChange(item.id, parseInt(v, 10))}>
+																<SelectTrigger className="w-16">
+																	<SelectValue placeholder="Pos" />
+																</SelectTrigger>
+																<SelectContent>
+																	{Array.from({ length: displayItems.length }).map((_, i) => (
+																		<SelectItem key={i} value={String(i + 1)}>{i + 1}</SelectItem>
+																	))}
+																</SelectContent>
+															</Select>
+															<Button size="sm" variant="ghost" onClick={() => removeContentItem(item.id)}>
+																<Trash2 className="h-4 w-4" />
+															</Button>
+														</div>
+													</div>
+												</CardHeader>
+												<CardContent className="space-y-4">
+													<div>
+														<Label>Title (optional)</Label>
+														<Input
+															value={item.title || ''}
+															onChange={(e) => updateContentItem(item.id, { title: e.target.value })}
+															placeholder="Enter section title"
+														/>
+													</div>
+													{renderEditor(item)}
+												</CardContent>
+											</Card>
+										))}
+									</div>
+								)
 								)}
 							</CardContent>
 						</Card>
