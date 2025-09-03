@@ -24,114 +24,121 @@ const styles = StyleSheet.create({
   page: {
     flexDirection: 'column',
     backgroundColor: '#ffffff',
-    padding: 30,
+    padding: 20,
     fontFamily: 'Helvetica',
-  },
-  header: {
-    marginBottom: 25,
-    padding: 25,
-
-    backgroundColor: '#2563eb',
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    color: '#ffffff',
-    letterSpacing: 0.5,
-  },
-  description: {
-    fontSize: 13,
-    color: '#f8fafc',
-    marginBottom: 8,
+    fontSize: 12,
     lineHeight: 1.4,
   },
+  header: {
+    marginBottom: 20,
+    padding: 20,
+    backgroundColor: '#2563eb',
+    borderRadius: 8,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 6,
+    color: '#ffffff',
+    lineHeight: 1.2,
+  },
+  description: {
+    fontSize: 12,
+    color: '#f8fafc',
+    marginBottom: 6,
+    lineHeight: 1.3,
+  },
   category: {
-    fontSize: 11,
+    fontSize: 10,
     backgroundColor: '#1e3a8a',
     color: '#ffffff',
-    padding: 6,
-    paddingHorizontal: 12,
-    borderRadius: 20,
+    padding: 4,
+    paddingHorizontal: 8,
+    borderRadius: 12,
     alignSelf: 'flex-start',
     fontWeight: 'bold',
-    letterSpacing: 0.3,
-  },
-  section: {
-    marginBottom: 18,
-    padding: 0,
-    backgroundColor: 'transparent',
-    borderRadius: 12,
-    breakInside: 'avoid',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-  },
-  sectionTitle: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#0f172a',
-    backgroundColor: '#eff6ff',
-    padding: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    borderLeftWidth: 4,
-    borderLeftColor: '#3b82f6',
-  },
-  contentBox: {
-    backgroundColor: '#fefefe',
-    padding: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    marginTop: 5,
-  },
-  text: {
-    fontSize: 12,
-    lineHeight: 1.6,
-    textAlign: 'justify',
-    color: '#1f2937',
-  },
-  code: {
-    fontSize: 11,
-    fontFamily: 'Courier',
-    backgroundColor: '#f3f4f6',
-    color: '#059669',
-    lineHeight: 1.5,
-    padding: 8,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#d1fae5',
-  },
-  math: {
-    fontSize: 12,
-    lineHeight: 1.5,
-    backgroundColor: '#fef3e2',
-    color: '#d97706',
-    padding: 8,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#fed7aa',
-  },
-  pageBreak: {
-    marginTop: 25,
-    borderTopWidth: 2,
-    borderTopColor: '#e5e7eb',
-    paddingTop: 25,
   },
   columnsContainer: {
     flexDirection: 'row',
+    gap: 10,
   },
   column: {
     flex: 1,
-    paddingHorizontal: 6,
+    paddingHorizontal: 5,
+  },
+  section: {
+    marginBottom: 12,
+    padding: 0,
+    backgroundColor: 'transparent',
+    borderRadius: 6,
+    breakInside: 'avoid',
+    orphans: 2,
+    widows: 2,
+  },
+  sectionTitle: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    marginBottom: 6,
+    color: '#0f172a',
+    backgroundColor: '#eff6ff',
+    padding: 8,
+    paddingHorizontal: 12,
+    borderRadius: 4,
+    borderLeftWidth: 3,
+    borderLeftColor: '#3b82f6',
+    lineHeight: 1.2,
+  },
+  contentBox: {
+    backgroundColor: '#fefefe',
+    padding: 10,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    marginTop: 3,
+  },
+  textContent: {
+    fontSize: 11,
+    lineHeight: 1.5,
+    color: '#1f2937',
+    marginBottom: 3,
+  },
+  codeContent: {
+    fontSize: 10,
+    fontFamily: 'Courier',
+    backgroundColor: '#f8fafc',
+    color: '#059669',
+    lineHeight: 1.4,
+    padding: 6,
+    borderRadius: 3,
+    borderWidth: 1,
+    borderColor: '#d1fae5',
+    marginBottom: 3,
+  },
+  mathContent: {
+    fontSize: 11,
+    lineHeight: 1.4,
+    backgroundColor: '#fef3e2',
+    color: '#d97706',
+    padding: 6,
+    borderRadius: 3,
+    borderWidth: 1,
+    borderColor: '#fed7aa',
+    marginBottom: 3,
+  },
+  pageBreak: {
+    marginTop: 15,
+    marginBottom: 15,
+    borderTopWidth: 1,
+    borderTopColor: '#e5e7eb',
+    paddingTop: 15,
+  },
+  continuationHeader: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1e3a8a',
+    marginBottom: 15,
+    textAlign: 'center',
+    lineHeight: 1.2,
   },
 });
 
@@ -150,7 +157,7 @@ const getPdfPalette = (category: string): { headerBg: string; badgeBg: string; a
   }
 };
 
-// Helper function to parse HTML and extract text with color information
+// Helper function to parse HTML and extract text with proper line breaks
 const parseHtmlContent = (html: string): Array<{ text: string; color?: string }> => {
   const segments: Array<{ text: string; color?: string }> = [];
   
@@ -177,6 +184,11 @@ const parseHtmlContent = (html: string): Array<{ text: string; color?: string }>
         }
       }
       
+      // Handle line breaks and paragraphs
+      if (element.tagName === 'BR' || element.tagName === 'P') {
+        segments.push({ text: '\n' });
+      }
+      
       // Process child nodes
       for (const child of Array.from(node.childNodes)) {
         if (child.nodeType === Node.TEXT_NODE) {
@@ -187,6 +199,11 @@ const parseHtmlContent = (html: string): Array<{ text: string; color?: string }>
         } else {
           processNode(child);
         }
+      }
+      
+      // Add line break after paragraphs
+      if (element.tagName === 'P' && element.nextSibling) {
+        segments.push({ text: '\n' });
       }
     }
   };
@@ -226,102 +243,153 @@ const renderMathToText = (latex: string): string => {
     .replace(/\\/g, '');
 };
 
+// Split long text into chunks that fit within page constraints
+const splitTextIntoChunks = (text: string, maxLength: number = 800): string[] => {
+  if (text.length <= maxLength) {
+    return [text];
+  }
+  
+  const chunks: string[] = [];
+  const sentences = text.split(/(?<=[.!?])\s+/);
+  let currentChunk = '';
+  
+  for (const sentence of sentences) {
+    if ((currentChunk + sentence).length <= maxLength) {
+      currentChunk += (currentChunk ? ' ' : '') + sentence;
+    } else {
+      if (currentChunk) {
+        chunks.push(currentChunk);
+        currentChunk = sentence;
+      } else {
+        // If single sentence is too long, split by words
+        const words = sentence.split(' ');
+        let wordChunk = '';
+        for (const word of words) {
+          if ((wordChunk + word).length <= maxLength) {
+            wordChunk += (wordChunk ? ' ' : '') + word;
+          } else {
+            if (wordChunk) {
+              chunks.push(wordChunk);
+              wordChunk = word;
+            } else {
+              chunks.push(word);
+            }
+          }
+        }
+        if (wordChunk) {
+          currentChunk = wordChunk;
+        }
+      }
+    }
+  }
+  
+  if (currentChunk) {
+    chunks.push(currentChunk);
+  }
+  
+  return chunks;
+};
+
+// Distribute items across columns more evenly
+const distributeItemsToColumns = (items: ContentItem[], columns: PdfColumnCount): ContentItem[][] => {
+  const columnArrays: ContentItem[][] = Array.from({ length: columns }, () => []);
+  
+  // Simple round-robin distribution
+  items.forEach((item, index) => {
+    const columnIndex = index % columns;
+    columnArrays[columnIndex].push(item);
+  });
+  
+  return columnArrays;
+};
+
 const CheatSheetPDF = ({ data, columns }: { data: CheatSheetData; columns: PdfColumnCount }) => {
-  // Determine items per page based on column count (approximate for layout balance)
-  const itemsPerPage = columns * 6;
-  const pages: ContentItem[][] = [];
   const palette = getPdfPalette(data.category);
   
-  for (let i = 0; i < data.content.items.length; i += itemsPerPage) {
-    pages.push(data.content.items.slice(i, i + itemsPerPage));
+  // Estimate content size and split into pages more intelligently
+  const maxItemsPerPage = columns === 2 ? 8 : 12;
+  const pages: ContentItem[][] = [];
+  
+  for (let i = 0; i < data.content.items.length; i += maxItemsPerPage) {
+    pages.push(data.content.items.slice(i, i + maxItemsPerPage));
   }
 
   return (
     <Document>
-      {pages.map((pageItems, pageIndex) => (
-        <Page key={pageIndex} size="A4" style={styles.page} wrap>
-          {pageIndex === 0 && (
-            <View style={[styles.header, { backgroundColor: palette.headerBg }]}>
-              <Text style={styles.title}>{data.title}</Text>
-              {data.description && (
-                <Text style={styles.description}>{data.description}</Text>
-              )}
-              <Text style={[styles.category, { backgroundColor: palette.badgeBg }]}>{data.category.toUpperCase()}</Text>
-            </View>
-          )}
+      {pages.map((pageItems, pageIndex) => {
+        const columnItems = distributeItemsToColumns(pageItems, columns);
+        
+        return (
+          <Page key={pageIndex} size="A4" style={styles.page}>
+            {pageIndex === 0 && (
+              <View style={[styles.header, { backgroundColor: palette.headerBg }]}>
+                <Text style={styles.title}>{data.title}</Text>
+                {data.description && (
+                  <Text style={styles.description}>{data.description}</Text>
+                )}
+                <Text style={[styles.category, { backgroundColor: palette.badgeBg }]}>
+                  {data.category.toUpperCase()}
+                </Text>
+              </View>
+            )}
 
-          {pageIndex > 0 && (
-            <View style={styles.pageBreak}>
-              <Text style={[styles.title, { color: palette.badgeBg, fontSize: 18 }]}>
-                {data.title} (continued)
-              </Text>
-            </View>
-          )}
+            {pageIndex > 0 && (
+              <View style={styles.pageBreak}>
+                <Text style={styles.continuationHeader}>
+                  {data.title} (continued - Page {pageIndex + 1})
+                </Text>
+              </View>
+            )}
 
-          <View style={styles.columnsContainer}>
-            {Array.from({ length: columns }).map((_, col) => (
-              <View key={col} style={[styles.column, col > 0 ? { marginLeft: 12 } : {}]}>
-                {pageItems
-                  .filter((_, idx) => idx % columns === col)
-                  .map((item) => (
-                    <View key={item.id} style={styles.section} wrap={false}>
-                      {item.title && (
-                        <Text style={[styles.sectionTitle, { borderLeftColor: palette.accent }]}>{item.title}</Text>
-                      )}
-                      <View style={styles.contentBox}>
-                        {item.type === 'text' && (
-                          <View>
-                            {parseHtmlContent(item.content).map((segment, segIndex) => (
-                              <Text
-                                key={segIndex}
-                                style={[
-                                  styles.text,
-                                  { color: segment.color || item.color || '#000000' },
-                                ]}
-                              >
-                                {segment.text}
-                              </Text>
-                            ))}
-                          </View>
+            <View style={styles.columnsContainer}>
+              {columnItems.map((columnContent, colIndex) => (
+                <View key={colIndex} style={styles.column}>
+                  {columnContent.map((item) => {
+                    const contentText = stripHtml(item.content);
+                    const textChunks = splitTextIntoChunks(contentText, 600);
+                    
+                    return textChunks.map((chunk, chunkIndex) => (
+                      <View key={`${item.id}-${chunkIndex}`} style={styles.section} wrap={false}>
+                        {chunkIndex === 0 && item.title && (
+                          <Text style={[styles.sectionTitle, { borderLeftColor: palette.accent }]}>
+                            {item.title}
+                          </Text>
                         )}
-                        {item.type === 'math' && (
-                          <View>
-                            {parseHtmlContent(item.content).map((segment, segIndex) => (
-                              <Text
-                                key={segIndex}
-                                style={[
-                                  styles.math,
-                                  { color: segment.color || item.color || '#000000' },
-                                ]}
-                              >
-                                {segment.text}
-                              </Text>
-                            ))}
-                          </View>
-                        )}
-                        {item.type === 'code' && (
-                          <View>
-                            {parseHtmlContent(item.content).map((segment, segIndex) => (
-                              <Text
-                                key={segIndex}
-                                style={[
-                                  styles.code,
-                                  { color: segment.color || item.color || '#000000' },
-                                ]}
-                              >
-                                {segment.text}
-                              </Text>
-                            ))}
-                          </View>
+                        
+                        <View style={styles.contentBox}>
+                          {item.type === 'text' && (
+                            <Text style={styles.textContent}>
+                              {chunk}
+                            </Text>
+                          )}
+                          
+                          {item.type === 'math' && (
+                            <Text style={styles.mathContent}>
+                              {chunk}
+                            </Text>
+                          )}
+                          
+                          {item.type === 'code' && (
+                            <Text style={styles.codeContent}>
+                              {chunk}
+                            </Text>
+                          )}
+                        </View>
+                        
+                        {chunkIndex < textChunks.length - 1 && (
+                          <Text style={{ fontSize: 8, color: '#6b7280', textAlign: 'center', marginTop: 3 }}>
+                            (continued...)
+                          </Text>
                         )}
                       </View>
-                    </View>
-                  ))}
-              </View>
-            ))}
-          </View>
-        </Page>
-      ))}
+                    ));
+                  })}
+                </View>
+              ))}
+            </View>
+          </Page>
+        );
+      })}
     </Document>
   );
 };
