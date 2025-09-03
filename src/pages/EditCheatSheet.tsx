@@ -475,7 +475,7 @@ const EditCheatSheet = () => {
 								
 								<div>
 									<Label htmlFor="category">Category</Label>
-									<Select value={category} onValueChange={setCategory}>
+									<Select value={category} onValueChange={(value) => setCategory(value as CheatSheetCategory)}>
 										<SelectTrigger>
 											<SelectValue placeholder="Select category" />
 										</SelectTrigger>

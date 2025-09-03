@@ -285,7 +285,7 @@ const Index = () => {
                   <CardContent className="pt-3">
                     <div className="flex items-center justify-between">
                       <div className="text-xs text-muted-foreground">
-                        Updated {format(new Date(sheet.updatedAt), 'MMM d, yyyy')}
+                        Updated {format(sheet.updatedAt instanceof Date ? sheet.updatedAt : (sheet.updatedAt as any).toDate ? (sheet.updatedAt as any).toDate() : new Date(), 'MMM d, yyyy')}
                       </div>
                       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <Button

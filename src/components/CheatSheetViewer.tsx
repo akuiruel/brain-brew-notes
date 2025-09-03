@@ -18,7 +18,7 @@ const CheatSheetViewer: React.FC<CheatSheetViewerProps> = ({
 }) => {
   const renderContentItem = (item: ContentItem, index: number) => {
     return (
-      <Card key={item.id} className="h-fit hover:shadow-md transition-shadow">
+      <Card key={item.id} className="h-fit hover:shadow-md transition-shadow break-inside-avoid">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <Badge 
@@ -44,7 +44,7 @@ const CheatSheetViewer: React.FC<CheatSheetViewerProps> = ({
         <CardContent className="pt-0">
           {item.type === 'text' && (
             <div 
-              className="prose prose-sm max-w-none text-foreground [&_p]:mb-2 [&_p]:leading-relaxed [&_ul]:mb-2 [&_ol]:mb-2 [&_li]:mb-1"
+              className="prose prose-sm max-w-none text-foreground [&_p]:mb-2 [&_p]:leading-relaxed [&_ul]:mb-2 [&_ol]:mb-2 [&_li]:mb-1 break-words"
               dangerouslySetInnerHTML={{ __html: item.content || "No content" }}
             />
           )}
@@ -52,16 +52,16 @@ const CheatSheetViewer: React.FC<CheatSheetViewerProps> = ({
           {item.type === 'math' && (
             <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 p-4 rounded-lg border border-amber-200 dark:border-amber-800">
               <div 
-                className="prose prose-sm max-w-none text-foreground [&_p]:mb-2 [&_p]:leading-relaxed"
+                className="prose prose-sm max-w-none text-foreground [&_p]:mb-2 [&_p]:leading-relaxed break-words"
                 dangerouslySetInnerHTML={{ __html: item.content || "No content" }}
               />
             </div>
           )}
           
           {item.type === 'code' && (
-            <div className="bg-slate-950 text-green-400 p-4 rounded-lg border border-slate-700 font-mono text-sm overflow-x-auto">
+            <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-4 rounded-lg font-mono text-sm overflow-x-auto">
               <div 
-                className="[&_p]:mb-1 [&_p]:leading-relaxed [&_span]:text-green-400 whitespace-pre-wrap"
+                className="text-slate-800 dark:text-slate-200 [&_p]:mb-2 [&_p]:leading-relaxed [&_span]:text-blue-600 [&_span]:dark:text-blue-400 whitespace-pre-wrap break-words"
                 dangerouslySetInnerHTML={{ __html: item.content || "No content" }}
               />
             </div>
@@ -101,7 +101,7 @@ const CheatSheetViewer: React.FC<CheatSheetViewerProps> = ({
       </div>
 
       {/* Content Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-min">
         {items.map((item, index) => renderContentItem(item, index))}
       </div>
 
