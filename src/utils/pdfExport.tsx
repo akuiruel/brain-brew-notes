@@ -157,24 +157,33 @@ const getPdfPalette = (category: string): { headerBg: string; badgeBg: string; a
   }
 };
 
-// Helper function to parse HTML and extract text with proper line breaks
-const parseHtmlContent = (html: string): Array<{ text: string; color?: string }> => {
-  const segments: Array<{ text: string; color?: string }> = [];
+// Helper function to parse HTML and extract formatted content
+const parseHtmlContent = (html: string): Array<{ text: string; bold?: boolean; color?: string }> => {
+  const segments: Array<{ text: string; bold?: boolean; color?: string }> = [];
   
   // Create a temporary div to parse HTML
   const tempDiv = document.createElement('div');
   tempDiv.innerHTML = html;
   
-  const processNode = (node: Node): void => {
+  const processNode = (node: Node, parentBold = false): void => {
     if (node.nodeType === Node.TEXT_NODE) {
       const text = node.textContent?.trim();
       if (text) {
-        segments.push({ text });
+        segments.push({ text, bold: parentBold });
       }
     } else if (node.nodeType === Node.ELEMENT_NODE) {
       const element = node as HTMLElement;
       const style = element.getAttribute('style');
+      const tagName = element.tagName.toUpperCase();
+      
       let color: string | undefined;
+      let isBold = parentBold;
+      
+      // Check for bold styling
+      if (tagName === 'B' || tagName === 'STRONG' || 
+          (style && (style.includes('font-weight: bold') || style.includes('font-weight:bold')))) {
+        isBold = true;
+      }
       
       // Extract color from inline style
       if (style) {
@@ -185,31 +194,31 @@ const parseHtmlContent = (html: string): Array<{ text: string; color?: string }>
       }
       
       // Handle line breaks and paragraphs
-      if (element.tagName === 'BR' || element.tagName === 'P') {
+      if (tagName === 'BR') {
         segments.push({ text: '\n' });
+        return;
+      }
+      
+      if (tagName === 'P') {
+        if (segments.length > 0) {
+          segments.push({ text: '\n' });
+        }
       }
       
       // Process child nodes
       for (const child of Array.from(node.childNodes)) {
-        if (child.nodeType === Node.TEXT_NODE) {
-          const text = child.textContent?.trim();
-          if (text) {
-            segments.push({ text, color });
-          }
-        } else {
-          processNode(child);
-        }
+        processNode(child, isBold);
       }
       
       // Add line break after paragraphs
-      if (element.tagName === 'P' && element.nextSibling) {
+      if (tagName === 'P' && element.nextSibling) {
         segments.push({ text: '\n' });
       }
     }
   };
   
   processNode(tempDiv);
-  return segments;
+  return segments.filter(segment => segment.text.trim() !== '');
 };
 
 // Helper function to strip HTML and preserve basic formatting  
@@ -345,8 +354,11 @@ const CheatSheetPDF = ({ data, columns }: { data: CheatSheetData; columns: PdfCo
               {columnItems.map((columnContent, colIndex) => (
                 <View key={colIndex} style={styles.column}>
                   {columnContent.map((item) => {
-                    const contentText = stripHtml(item.content);
-                    const textChunks = splitTextIntoChunks(contentText, 600);
+                    // For text content, preserve HTML formatting; for others, strip HTML
+                    const contentForProcessing = item.type === 'text' ? item.content : stripHtml(item.content);
+                    const textChunks = item.type === 'text' 
+                      ? splitTextIntoChunks(contentForProcessing, 400) 
+                      : splitTextIntoChunks(contentForProcessing, 600);
                     
                     return textChunks.map((chunk, chunkIndex) => (
                       <View key={`${item.id}-${chunkIndex}`} style={styles.section} wrap={false}>
@@ -358,20 +370,31 @@ const CheatSheetPDF = ({ data, columns }: { data: CheatSheetData; columns: PdfCo
                         
                         <View style={styles.contentBox}>
                           {item.type === 'text' && (
-                            <Text style={styles.textContent}>
-                              {chunk}
-                            </Text>
+                            <>
+                              {parseHtmlContent(chunk).map((segment, segIndex) => (
+                                <Text 
+                                  key={segIndex}
+                                  style={[
+                                    styles.textContent,
+                                    segment.bold && { fontWeight: 'bold' },
+                                    segment.color && { color: segment.color }
+                                  ]}
+                                >
+                                  {segment.text}
+                                </Text>
+                              ))}
+                            </>
                           )}
                           
                           {item.type === 'math' && (
                             <Text style={styles.mathContent}>
-                              {chunk}
+                              {renderMathToText(chunk)}
                             </Text>
                           )}
                           
                           {item.type === 'code' && (
                             <Text style={styles.codeContent}>
-                              {chunk}
+                              {stripHtml(chunk)}
                             </Text>
                           )}
                         </View>
