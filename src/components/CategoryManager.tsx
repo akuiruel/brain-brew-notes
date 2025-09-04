@@ -1,78 +1,249 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useCheatSheets } from '@/hooks/useCheatSheets';
+import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import RichTextEditor from '@/components/RichTextEditor';
+import MathRichTextEditor from '@/components/MathRichTextEditor';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { useCheatSheets } from '@/hooks/useCheatSheets';
-import { Plus, Trash2, Palette, Tag } from 'lucide-react';
-import type { CustomCategoryData } from '@/lib/database';
+import { Save, Plus, Trash2, ArrowUp, ArrowDown, GripVertical } from 'lucide-react';
+import type { ContentItem, CheatSheetCategory } from '@/integrations/firebase/types';
+import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { SortableContext, useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
-const PRESET_COLORS = [
-  '#ef4444', '#f97316', '#f59e0b', '#eab308', '#84cc16', '#22c55e',
-  '#10b981', '#14b8a6', '#06b6d4', '#0ea5e9', '#3b82f6', '#6366f1',
-  '#8b5cf6', '#a855f7', '#d946ef', '#ec4899', '#f43f5e', '#64748b'
-];
+const moveItem = <T,>(array: T[], fromIndex: number, toIndex: number): T[] => {
+  const newArray = array.slice();
+  const [moved] = newArray.splice(fromIndex, 1);
+  newArray.splice(toIndex, 0, moved);
+  return newArray;
+};
 
-const PRESET_ICONS = [
-  '📚', '💻', '🔬', '🎨', '🏃', '🍳', '🎵', '🌱', '⚡', '🔧',
-  '📊', '🎯', '🚀', '💡', '🔍', '📝', '🎮', '🏠', '💰', '🌟'
-];
+const SortableItem = ({
+  item,
+  index,
+  length,
+  onRemove,
+  onMoveTo,
+  updateContentItem,
+}: {
+  item: ContentItem;
+  index: number;
+  length: number;
+  onRemove: (id: string) => void;
+  onMoveTo: (id: string, newPositionOneBased: number) => void;
+  updateContentItem: (id: string, updates: Partial<ContentItem>) => void;
+}) => {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: item.id });
+  const style: any = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
 
-interface CategoryManagerProps {
-  onCategorySelect?: (category: string, customName?: string) => void;
-}
-
-const CategoryManager: React.FC<CategoryManagerProps> = ({ onCategorySelect }) => {
-  const { customCategories, saveCustomCategory, deleteCustomCategory } = useCheatSheets();
+  return (
+    <Card ref={setNodeRef as any} style={style} className="relative">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Button size="icon" variant="ghost" className="cursor-grab" {...attributes} {...listeners}>
+              <GripVertical className="h-4 w-4" />
+            </Button>
+            <span className="text-sm font-medium">
+              {item.type === 'text' && 'Text'}
+              {item.type === 'math' && 'Math Formula'}
+              {item.type === 'code' && 'Code'}
+            </span>
+            <span className="text-xs text-muted-foreground">#{index + 1}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" onClick={() => onMoveTo(item.id, Math.max(1, index))} disabled={index === 0}>
+              <ArrowUp className="h-4 w-4" />
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => onMoveTo(item.id, Math.min(length, index + 2))} disabled={index === length - 1}>
+              <ArrowDown className="h-4 w-4" />
+            </Button>
+            <Select value={String(index + 1)} onValueChange={(v) => onMoveTo(item.id, parseInt(v, 10))}>
+              <SelectTrigger className="w-16">
+                <SelectValue placeholder="Pos" />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length }).map((_, i) => (
+                  <SelectItem key={i} value={String(i + 1)}>{i + 1}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button size="sm" variant="ghost" onClick={() => onRemove(item.id)}>
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div>
+          <Label>Title (optional)</Label>
+          <Input
+            value={item.title || ''}
+            onChange={(e) => updateContentItem(item.id, { title: e.target.value })}
+            placeholder="Enter section title"
+          />
+        </div>
+        {item.type === 'text' && (
+          <div>
+            <Label>Content</Label>
+            <RichTextEditor
+              value={item.content}
+              onChange={(content) => updateContentItem(item.id, { content })}
+              placeholder="Enter text content with color formatting"
+              className="mt-2"
+            />
+          </div>
+        )}
+        {item.type === 'math' && (
+          <div>
+            <Label>Content</Label>
+            <MathRichTextEditor
+              value={item.content}
+              onChange={(content) => updateContentItem(item.id, { content })}
+              placeholder="Enter math formulas and text..."
+              className="mt-2"
+            />
+          </div>
+        )}
+        {item.type === 'code' && (
+          <div>
+            <Label>Content</Label>
+            <RichTextEditor
+              value={item.content}
+              onChange={(content) => updateContentItem(item.id, { content })}
+              placeholder="Enter code..."
+              className="mt-2"
+            />
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+const CreateCheatSheet = () => {
+  const navigate = useNavigate();
   const { toast } = useToast();
-  const [isOpen, setIsOpen] = useState(false);
-  const [newCategoryName, setNewCategoryName] = useState('');
-  const [selectedColor, setSelectedColor] = useState(PRESET_COLORS[0]);
-  const [selectedIcon, setSelectedIcon] = useState(PRESET_ICONS[0]);
+  const { saveCheatSheet, isOnline } = useCheatSheets();
+  
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [category, setCategory] = useState<CheatSheetCategory | ''>('');
+  const [contentItems, setContentItems] = useState<ContentItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const displayItems = contentItems;
+  const handlePositionChange = (id: string, newPositionOneBased: number) => {
+    const oldIndex = displayItems.findIndex((i) => i.id === id);
+    const newIndex = Math.max(0, Math.min(displayItems.length - 1, newPositionOneBased - 1));
+    if (oldIndex === -1 || oldIndex === newIndex) return;
+    const newDisplay = moveItem(displayItems, oldIndex, newIndex);
+    setContentItems(newDisplay);
+  };
 
-  const handleCreateCategory = async () => {
-    if (!newCategoryName.trim()) {
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor)
+  );
+
+  const handleDragEnd = (event: any) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = displayItems.findIndex((i) => i.id === active.id);
+    const newIndex = displayItems.findIndex((i) => i.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+    setContentItems(moveItem(displayItems, oldIndex, newIndex));
+  };
+
+  if (!isOnline) {
+    return <Layout><div /></Layout>;
+  }
+  const addContentItem = (type: 'text' | 'math' | 'code') => {
+    const newItem: ContentItem = {
+      id: crypto.randomUUID(),
+      type,
+      content: '',
+      title: '',
+      color: '#000000',
+    };
+    setContentItems(prev => [...prev, newItem]);
+  };
+
+  const updateContentItem = (id: string, updates: Partial<ContentItem>) => {
+    setContentItems(prev => 
+      prev.map(item => item.id === id ? { ...item, ...updates } : item)
+    );
+  };
+
+  const removeContentItem = (id: string) => {
+    setContentItems(prev => prev.filter(item => item.id !== id));
+  };
+
+  const handleSave = async () => {
+    if (!title.trim()) {
       toast({
         title: "Error",
-        description: "Please enter a category name",
+        description: "Please enter a title for your cheat sheet",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!category) {
+      toast({
+        title: "Error",
+        description: "Please select a category",
         variant: "destructive",
       });
       return;
     }
 
     setIsLoading(true);
+
     try {
-      const newCategory = await saveCustomCategory({
-        name: newCategoryName.trim(),
-        color: selectedColor,
-        icon: selectedIcon,
-      });
+      const cheatSheetData = {
+        title: title.trim(),
+        description: description.trim(),
+        category: category as CheatSheetCategory,
+        content: { items: contentItems },
+        isPublic: false,
+      };
+
+      console.log('Saving cheat sheet data:', cheatSheetData);
+      await saveCheatSheet(cheatSheetData);
 
       toast({
         title: "Success",
-        description: "Custom category created successfully!",
+        description: "Cheat sheet created successfully!",
       });
-
-      // Reset form
-      setNewCategoryName('');
-      setSelectedColor(PRESET_COLORS[0]);
-      setSelectedIcon(PRESET_ICONS[0]);
-      setIsOpen(false);
-
-      // Select the new category if callback provided
-      if (onCategorySelect) {
-        onCategorySelect('custom', newCategory.name);
-      }
+      
+      navigate('/');
     } catch (error) {
-      console.error('Error creating custom category:', error);
+      console.error('Error creating cheat sheet:', error);
+      
+      // More detailed error message
+      let errorMessage = 'Failed to create cheat sheet';
+      if (error instanceof Error) {
+        if (error.message.includes('permission-denied')) {
+          errorMessage = 'Permission denied. Please check if you are signed in and have the correct permissions.';
+        } else if (error.message.includes('network-request-failed')) {
+          errorMessage = 'Network error. Please check your internet connection.';
+        } else if (error.message) {
+          errorMessage = `Error: ${error.message}`;
+        }
+      }
+      
       toast({
         title: "Error",
-        description: "Failed to create custom category",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -80,163 +251,132 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({ onCategorySelect }) =
     }
   };
 
-  const handleDeleteCategory = async (id: string) => {
-    try {
-      await deleteCustomCategory(id);
-      toast({
-        title: "Success",
-        description: "Custom category deleted successfully",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete custom category",
-        variant: "destructive",
-      });
-    }
-  };
-
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Custom Categories</h3>
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
-          <DialogTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-2">
-              <Plus className="h-4 w-4" />
-              Add Category
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create Custom Category</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="categoryName">Category Name</Label>
-                <Input
-                  id="categoryName"
-                  value={newCategoryName}
-                  onChange={(e) => setNewCategoryName(e.target.value)}
-                  placeholder="Enter category name"
-                />
-              </div>
-
-              <div>
-                <Label>Color</Label>
-                <div className="grid grid-cols-6 gap-2 mt-2">
-                  {PRESET_COLORS.map((color) => (
-                    <button
-                      key={color}
-                      onClick={() => setSelectedColor(color)}
-                      className={`w-8 h-8 rounded-full border-2 ${
-                        selectedColor === color ? 'border-gray-800' : 'border-gray-300'
-                      }`}
-                      style={{ backgroundColor: color }}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <Label>Icon</Label>
-                <div className="grid grid-cols-10 gap-2 mt-2">
-                  {PRESET_ICONS.map((icon) => (
-                    <button
-                      key={icon}
-                      onClick={() => setSelectedIcon(icon)}
-                      className={`w-8 h-8 rounded border text-lg flex items-center justify-center ${
-                        selectedIcon === icon 
-                          ? 'border-gray-800 bg-gray-100' 
-                          : 'border-gray-300 hover:bg-gray-50'
-                      }`}
-                    >
-                      {icon}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
-                <span className="text-lg">{selectedIcon}</span>
-                <span 
-                  className="px-3 py-1 rounded-full text-white text-sm font-medium"
-                  style={{ backgroundColor: selectedColor }}
-                >
-                  {newCategoryName || 'Preview'}
-                </span>
-              </div>
-
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setIsOpen(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={handleCreateCategory} disabled={isLoading}>
-                  {isLoading ? 'Creating...' : 'Create Category'}
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      {customCategories.length === 0 ? (
-        <div className="text-center py-6 text-muted-foreground">
-          <Tag className="h-8 w-8 mx-auto mb-2 opacity-50" />
-          <p className="text-sm">No custom categories yet</p>
+    <Layout>
+      <div className="max-w-4xl mx-auto space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold">Create New Cheat Sheet</h1>
+          <Button onClick={handleSave} disabled={isLoading} className="gap-2">
+            <Save className="h-4 w-4" />
+            {isLoading ? 'Saving...' : 'Save'}
+          </Button>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {customCategories.map((category) => (
-            <Card key={category.id} className="relative group">
-              <CardContent className="p-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">{category.icon}</span>
-                    <Badge 
-                      variant="outline" 
-                      className="text-white border-0"
-                      style={{ backgroundColor: category.color }}
-                    >
-                      {category.name}
-                    </Badge>
-                  </div>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button 
-                        size="sm" 
-                        variant="ghost" 
-                        className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Custom Category</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to delete "{category.name}"? This action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => handleDeleteCategory(category.id!)}
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        >
-                          Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-1 space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Basic Information</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="title">Title</Label>
+                  <Input
+                    id="title"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="Enter cheat sheet title"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="category">Category</Label>
+                  <Select value={category} onValueChange={(value) => setCategory(value as CheatSheetCategory)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="mathematics">Mathematics</SelectItem>
+                      <SelectItem value="software">Software</SelectItem>
+                      <SelectItem value="coding">Coding</SelectItem>
+                      <SelectItem value="study">Study</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Brief description (optional)"
+                    rows={3}
+                  />
                 </div>
               </CardContent>
             </Card>
-          ))}
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Add Content</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button
+                  variant="outline"
+                  onClick={() => addContentItem('text')}
+                  className="w-full justify-start gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Text
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => addContentItem('math')}
+                  className="w-full justify-start gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Math Formula
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => addContentItem('code')}
+                  className="w-full justify-start gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Code
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="lg:col-span-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Content</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {contentItems.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No content added yet. Use the buttons on the left to add content.
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                      <SortableContext items={displayItems.map((i) => i.id)}>
+                        {displayItems.map((item, index) => (
+                          <SortableItem
+                            key={item.id}
+                            item={item}
+                            index={index}
+                            length={displayItems.length}
+                            onRemove={removeContentItem}
+                            onMoveTo={handlePositionChange}
+                            updateContentItem={updateContentItem}
+                          />
+                        ))}
+                      </SortableContext>
+                    </DndContext>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
-      )}
-    </div>
+      </div>
+    </Layout>
   );
 };
 
-export default CategoryManager;
+export default CreateCheatSheet;

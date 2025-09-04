@@ -5,6 +5,7 @@ export interface CheatSheet {
   title: string;
   description?: string;
   category: CheatSheetCategory;
+  customCategory?: string;
   content: CheatSheetContent;
   isPublic: boolean;
   createdAt: Date | any;

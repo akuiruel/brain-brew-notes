@@ -72,6 +72,13 @@ const Index = () => {
     }
   };
 
+  const getCustomCategoryIcon = (customCategoryName?: string) => {
+    if (!customCategoryName) return <Folder className="h-4 w-4" />;
+    const customCat = cheatSheets.find(sheet => sheet.customCategory === customCategoryName);
+    // For now, return a default icon since we don't store icon in the cheat sheet
+    return <span className="text-sm">🏷️</span>;
+  };
+
   const getCategoryColor = (category: string) => {
     switch (category) {
       case 'mathematics': return 'bg-blue-100 text-blue-800 border-blue-200';
@@ -245,6 +252,7 @@ const Index = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredSheets.map((sheet) => {
+              const displayCategory = sheet.customCategory || sheet.category;
               const theme = getCategoryTheme(sheet.category);
               return (
                 <Card key={sheet.id} className="hover:shadow-lg transition-shadow group">
@@ -254,7 +262,7 @@ const Index = () => {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-3 min-w-0">
                             <div className={`h-9 w-9 rounded-lg flex items-center justify-center text-white ${theme.iconBg}`}>
-                              {getCategoryIcon(sheet.category)}
+                              {sheet.customCategory ? getCustomCategoryIcon(sheet.customCategory) : getCategoryIcon(sheet.category)}
                             </div>
                             <CardTitle className="text-lg font-semibold truncate">
                               {sheet.title}
@@ -263,10 +271,12 @@ const Index = () => {
                           <div className="flex items-center gap-2 mt-2">
                             <Badge 
                               variant="outline" 
-                              className={`text-xs ${getCategoryColor(sheet.category)}`}
+                              className={`text-xs ${getCategoryColor(sheet.customCategory ? 'other' : sheet.category)}`}
                             >
-                              <span className="mr-1">{getCategoryIcon(sheet.category)}</span>
-                              {sheet.category.charAt(0).toUpperCase() + sheet.category.slice(1)}
+                              <span className="mr-1">
+                                {sheet.customCategory ? getCustomCategoryIcon(sheet.customCategory) : getCategoryIcon(sheet.category)}
+                              </span>
+                              {displayCategory.charAt(0).toUpperCase() + displayCategory.slice(1)}
                             </Badge>
                             <span className="text-xs text-muted-foreground">
                               {sheet.content?.items?.length || 0} sections

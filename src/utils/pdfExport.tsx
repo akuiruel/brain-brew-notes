@@ -1,4 +1,15 @@
-import { Document, Page, Text, View, StyleSheet, pdf } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, pdf, Font } from '@react-pdf/renderer';
+
+// Register fonts for better formatting support
+Font.register({
+  family: 'Helvetica',
+  fonts: [
+    { src: 'https://fonts.gstatic.com/s/opensans/v40/memSYaGs126MiZpBA-UvWbX2vVnXBbObj2OVZyOOSr4dVJWUgsjZ0B4gaVc.woff2', fontWeight: 'normal' },
+    { src: 'https://fonts.gstatic.com/s/opensans/v40/memSYaGs126MiZpBA-UvWbX2vVnXBbObj2OVZyOOSr4dVJWUgsg-1x4gaVc.woff2', fontWeight: 'bold' },
+    { src: 'https://fonts.gstatic.com/s/opensans/v40/memQYaGs126MiZpBA-UFUIcVXSCEkx2cmqvXlWq8tWZ0Pw86hd0Rk8ZkWVAexQ.woff2', fontStyle: 'italic' },
+    { src: 'https://fonts.gstatic.com/s/opensans/v40/memQYaGs126MiZpBA-UFUIcVXSCEkx2cmqvXlWq8tWZ0Pw86hd0RkxZkWVAexQ.woff2', fontWeight: 'bold', fontStyle: 'italic' },
+  ]
+});
 
 interface ContentItem {
   id: string;
@@ -100,7 +111,29 @@ const styles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 1.5,
     color: '#1f2937',
-    marginBottom: 3,
+    marginBottom: 2,
+  },
+  boldText: {
+    fontSize: 11,
+    lineHeight: 1.5,
+    color: '#1f2937',
+    fontWeight: 'bold',
+    marginBottom: 2,
+  },
+  italicText: {
+    fontSize: 11,
+    lineHeight: 1.5,
+    color: '#1f2937',
+    fontStyle: 'italic',
+    marginBottom: 2,
+  },
+  boldItalicText: {
+    fontSize: 11,
+    lineHeight: 1.5,
+    color: '#1f2937',
+    fontWeight: 'bold',
+    fontStyle: 'italic',
+    marginBottom: 2,
   },
   codeContent: {
     fontSize: 10,
@@ -153,36 +186,41 @@ const getPdfPalette = (category: string): { headerBg: string; badgeBg: string; a
     case 'study':
       return { headerBg: '#d97706', badgeBg: '#92400e', accent: '#f59e0b' };
     default:
-      return { headerBg: '#334155', badgeBg: '#0f172a', accent: '#64748b' };
+      return { headerBg: '#6366f1', badgeBg: '#4338ca', accent: '#8b5cf6' };
   }
 };
 
 // Helper function to parse HTML and extract formatted content
-const parseHtmlContent = (html: string): Array<{ text: string; bold?: boolean; italic?: boolean; color?: string }> => {
+const parseHtmlContent = (html: string): Array<{ text: string; bold?: boolean; italic?: boolean; color?: string; isNewLine?: boolean }> => {
   const segments: Array<{ text: string; bold?: boolean; italic?: boolean; color?: string }> = [];
   
   // Create a temporary div to parse HTML
   const tempDiv = document.createElement('div');
   tempDiv.innerHTML = html;
   
-  const processNode = (node: Node, parentBold = false, parentItalic = false): void => {
+  const processNode = (node: Node, parentBold = false, parentItalic = false, parentColor?: string): void => {
     if (node.nodeType === Node.TEXT_NODE) {
-      const text = node.textContent?.trim();
+      const text = node.textContent || '';
       if (text) {
-        segments.push({ text, bold: parentBold, italic: parentItalic });
+        segments.push({ 
+          text, 
+          bold: parentBold, 
+          italic: parentItalic,
+          color: parentColor 
+        });
       }
     } else if (node.nodeType === Node.ELEMENT_NODE) {
       const element = node as HTMLElement;
       const style = element.getAttribute('style');
       const tagName = element.tagName.toUpperCase();
       
-      let color: string | undefined;
+      let color: string | undefined = parentColor;
       let isBold = parentBold;
       let isItalic = parentItalic;
       
       // Check for bold styling
       if (tagName === 'B' || tagName === 'STRONG' || 
-          (style && (style.includes('font-weight: bold') || style.includes('font-weight:bold')))) {
+          (style && (style.includes('font-weight: bold') || style.includes('font-weight:bold') || style.includes('font-weight: 700')))) {
         isBold = true;
       }
       
@@ -197,16 +235,6 @@ const parseHtmlContent = (html: string): Array<{ text: string; bold?: boolean; i
         const colorMatch = style.match(/color:\s*([^;]+)/i);
         if (colorMatch) {
           color = colorMatch[1].trim();
-          // Convert hex colors to RGB if needed
-          if (color.startsWith('#')) {
-            const hex = color.slice(1);
-            if (hex.length === 6) {
-              const r = parseInt(hex.slice(0, 2), 16);
-              const g = parseInt(hex.slice(2, 4), 16);
-              const b = parseInt(hex.slice(4, 6), 16);
-              color = `rgb(${r}, ${g}, ${b})`;
-            }
-          }
         }
       }
       
@@ -224,7 +252,7 @@ const parseHtmlContent = (html: string): Array<{ text: string; bold?: boolean; i
       
       // Process child nodes
       for (const child of Array.from(node.childNodes)) {
-        processNode(child, isBold, isItalic);
+        processNode(child, isBold, isItalic, color);
       }
       
       // Add line break after paragraphs
@@ -235,7 +263,7 @@ const parseHtmlContent = (html: string): Array<{ text: string; bold?: boolean; i
   };
   
   processNode(tempDiv);
-  return segments.filter(segment => segment.text.trim() !== '');
+  return segments;
 };
 
 // Helper function to strip HTML and preserve basic formatting  
@@ -330,7 +358,7 @@ const distributeItemsToColumns = (items: ContentItem[], columns: PdfColumnCount)
 };
 
 const CheatSheetPDF = ({ data, columns }: { data: CheatSheetData; columns: PdfColumnCount }) => {
-  const palette = getPdfPalette(data.customCategory ? 'other' : data.category);
+  const palette = getPdfPalette(data.customCategory ? 'custom' : data.category);
   
   // Estimate content size and split into pages more intelligently
   const maxItemsPerPage = columns === 2 ? 8 : 12;
@@ -354,7 +382,7 @@ const CheatSheetPDF = ({ data, columns }: { data: CheatSheetData; columns: PdfCo
                   <Text style={styles.description}>{data.description}</Text>
                 )}
                 <Text style={[styles.category, { backgroundColor: palette.badgeBg }]}>
-                  {(data.customCategory || data.category).toUpperCase()}
+                  {data.customCategory ? `CUSTOM: ${data.customCategory.toUpperCase()}` : data.category.toUpperCase()}
                 </Text>
               </View>
             )}
@@ -371,11 +399,7 @@ const CheatSheetPDF = ({ data, columns }: { data: CheatSheetData; columns: PdfCo
               {columnItems.map((columnContent, colIndex) => (
                 <View key={colIndex} style={styles.column}>
                   {columnContent.map((item) => {
-                    // For text content, preserve HTML formatting; for others, strip HTML
-                    const contentForProcessing = item.type === 'text' ? item.content : stripHtml(item.content);
-                    const textChunks = item.type === 'text' 
-                      ? splitTextIntoChunks(contentForProcessing, 400) 
-                      : splitTextIntoChunks(contentForProcessing, 600);
+                    const textChunks = splitTextIntoChunks(stripHtml(item.content), 600);
                     
                     return textChunks.map((chunk, chunkIndex) => (
                       <View key={`${item.id}-${chunkIndex}`} style={styles.section} wrap={false}>
@@ -387,32 +411,45 @@ const CheatSheetPDF = ({ data, columns }: { data: CheatSheetData; columns: PdfCo
                         
                         <View style={styles.contentBox}>
                           {item.type === 'text' && (
-                            <>
-                              {parseHtmlContent(chunk).map((segment, segIndex) => (
+                            <View>
+                              {parseHtmlContent(item.content).map((segment, segIndex) => {
+                                if (segment.text === '\n') {
+                                  return <Text key={segIndex} style={{ fontSize: 6 }}>{'\n'}</Text>;
+                                }
+                                
+                                let textStyle = styles.textContent;
+                                if (segment.bold && segment.italic) {
+                                  textStyle = styles.boldItalicText;
+                                } else if (segment.bold) {
+                                  textStyle = styles.boldText;
+                                } else if (segment.italic) {
+                                  textStyle = styles.italicText;
+                                }
+                                
+                                return (
                                 <Text 
-                                  key={segIndex}
+                                  key={segIndex} 
                                   style={[
-                                    styles.textContent,
-                                    segment.bold && { fontFamily: 'Helvetica-Bold' },
-                                    segment.italic && { fontFamily: segment.bold ? 'Helvetica-BoldOblique' : 'Helvetica-Oblique' },
+                                    textStyle,
                                     segment.color && { color: segment.color },
                                   ]}
                                 >
                                   {segment.text}
                                 </Text>
-                              ))}
-                            </>
+                                );
+                              })}
+                            </View>
                           )}
                           
                           {item.type === 'math' && (
                             <Text style={styles.mathContent}>
-                              {renderMathToText(chunk)}
+                              {renderMathToText(stripHtml(item.content))}
                             </Text>
                           )}
                           
                           {item.type === 'code' && (
                             <Text style={styles.codeContent}>
-                              {stripHtml(chunk)}
+                              {stripHtml(item.content)}
                             </Text>
                           )}
                         </View>

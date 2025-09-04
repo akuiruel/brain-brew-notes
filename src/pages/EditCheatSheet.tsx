@@ -243,10 +243,10 @@ const EditCheatSheet = () => {
 			return;
 		}
 
-		if (!category) {
+		if (!category && !customCategoryId) {
 			toast({
 				title: "Error",
-				description: "Please select a category",
+				description: "Please select a category or create a custom one",
 				variant: "destructive",
 			});
 			return;
@@ -255,10 +255,22 @@ const EditCheatSheet = () => {
 		setIsLoading(true);
 
 		try {
+			let finalCategory: CheatSheetCategory;
+			let customCategoryName: string | undefined;
+			
+			if (category === 'custom' && customCategoryId) {
+				finalCategory = 'other'; // Use 'other' as base category for custom ones
+				const customCat = customCategories.find(cat => cat.id === customCategoryId);
+				customCategoryName = customCat?.name;
+			} else {
+				finalCategory = category as CheatSheetCategory;
+			}
+
 			await updateCheatSheet(id!, {
 				title: title.trim(),
 				description: description.trim(),
-				category: category as CheatSheetCategory,
+				category: finalCategory,
+				customCategory: customCategoryName,
 				content: { items: contentItems },
 			});
 
@@ -277,6 +289,15 @@ const EditCheatSheet = () => {
 			});
 		} finally {
 			setIsLoading(false);
+		}
+	};
+
+	const handleCategorySelect = (selectedCat: string, customId?: string) => {
+		setCategory(selectedCat as CheatSheetCategory);
+		if (selectedCat === 'custom' && customId) {
+			setCustomCategoryId(customId);
+		} else {
+			setCustomCategoryId('');
 		}
 	};
 
@@ -353,9 +374,23 @@ const EditCheatSheet = () => {
 								
 								<div>
 									<Label htmlFor="category">Category</Label>
-									<Select value={category} onValueChange={(value) => setCategory(value as CheatSheetCategory)}>
+									<Select 
+										value={category === 'custom' ? 'custom' : category} 
+										onValueChange={(value) => handleCategorySelect(value)}
+									>
 										<SelectTrigger>
-											<SelectValue placeholder="Select category" />
+											<SelectValue placeholder="Select category">
+												{category === 'custom' && customCategoryId ? (
+													<div className="flex items-center gap-2">
+														<span>{customCategories.find(cat => cat.id === customCategoryId)?.icon}</span>
+														<span>{customCategories.find(cat => cat.id === customCategoryId)?.name}</span>
+													</div>
+												) : category ? (
+													category.charAt(0).toUpperCase() + category.slice(1)
+												) : (
+													"Select category"
+												)}
+											</SelectValue>
 										</SelectTrigger>
 										<SelectContent>
 											<SelectItem value="mathematics">Mathematics</SelectItem>
@@ -363,9 +398,20 @@ const EditCheatSheet = () => {
 											<SelectItem value="coding">Coding</SelectItem>
 											<SelectItem value="study">Study</SelectItem>
 											<SelectItem value="other">Other</SelectItem>
+											<SelectItem value="custom">Custom Category</SelectItem>
 										</SelectContent>
 									</Select>
 								</div>
+
+								{category === 'custom' && (
+									<div>
+										<CategoryManager 
+											onCategorySelect={handleCategorySelect}
+											selectedCategory={category}
+											selectedCustomCategory={customCategoryId}
+										/>
+									</div>
+								)}
 
 								<div>
 									<Label htmlFor="description">Description</Label>

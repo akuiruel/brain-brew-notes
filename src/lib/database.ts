@@ -139,6 +139,7 @@ export const createCheatSheet = async (cheatSheetData: Omit<CheatSheetData, 'id'
       title: cheatSheetData.title,
       description: cheatSheetData.description,
       category: cheatSheetData.category,
+      customCategory: cheatSheetData.customCategory,
       content: cheatSheetData.content,
       isPublic: cheatSheetData.isPublic || false,
       createdAt: serverTimestamp(),
