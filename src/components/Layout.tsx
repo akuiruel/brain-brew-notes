@@ -63,19 +63,19 @@ const Layout = ({ children }: LayoutProps) => {
         </div>
       )}
       
-      <header className="border-b border-border">
+      <header className="border-b border-border bg-gradient-to-r from-[hsl(var(--header-bg))] to-[hsl(var(--header-accent))] text-white shadow-lg">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-6">
             <Link to="/" className="flex items-center gap-2">
-              <FileText className="h-6 w-6 text-primary" />
-              <h1 className="text-xl font-bold">CheatSheet App</h1>
+              <FileText className="h-6 w-6 text-white" />
+              <h1 className="text-xl font-bold text-white">CheatSheet App</h1>
             </Link>
             <nav className="flex items-center gap-4">
               <Link to="/">
-                <Button variant="ghost">Dashboard</Button>
+                <Button variant="ghost" className="text-white hover:bg-white/20 hover:text-white">Dashboard</Button>
               </Link>
               <Link to="/create">
-                <Button variant="ghost" className="gap-2">
+                <Button variant="ghost" className="gap-2 text-white hover:bg-white/20 hover:text-white">
                   <Plus className="h-4 w-4" />
                   Create
                 </Button>

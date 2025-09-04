@@ -102,25 +102,6 @@ const SortableItem = ({
               placeholder="Enter text content with color formatting"
               className="mt-2"
             />
-            <div className="mt-2 p-3 border rounded-md bg-muted/50">
-              <Label className="text-xs text-muted-foreground">Preview:</Label>
-              <Card className="mt-2 h-fit">
-                <CardHeader className="pb-2">
-                  <Badge variant="outline" className="text-xs w-fit bg-blue-50 text-blue-700 border-blue-200">
-                    📝 Text
-                  </Badge>
-                  {item.title && (
-                    <CardTitle className="text-sm font-semibold">{item.title}</CardTitle>
-                  )}
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div 
-                    className="prose prose-sm max-w-none text-foreground [&_p]:mb-2 [&_p]:leading-relaxed"
-                    dangerouslySetInnerHTML={{ __html: item.content || "Type content to see preview..." }}
-                  />
-                </CardContent>
-              </Card>
-            </div>
           </div>
         )}
         {item.type === 'math' && (
@@ -132,27 +113,6 @@ const SortableItem = ({
               placeholder="Enter math formulas and text..."
               className="mt-2"
             />
-            <div className="mt-2 p-3 border rounded-md bg-muted/50">
-              <Label className="text-xs text-muted-foreground">Preview:</Label>
-              <Card className="mt-2 h-fit">
-                <CardHeader className="pb-2">
-                  <Badge variant="outline" className="text-xs w-fit bg-amber-50 text-amber-700 border-amber-200">
-                    🧮 Math
-                  </Badge>
-                  {item.title && (
-                    <CardTitle className="text-sm font-semibold">{item.title}</CardTitle>
-                  )}
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 p-3 rounded-lg border border-amber-200 dark:border-amber-800">
-                    <div 
-                      className="prose prose-sm max-w-none text-foreground [&_p]:mb-2 [&_p]:leading-relaxed"
-                      dangerouslySetInnerHTML={{ __html: item.content || "Type content to see preview..." }}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
           </div>
         )}
         {item.type === 'code' && (
@@ -164,27 +124,6 @@ const SortableItem = ({
               placeholder="Enter code..."
               className="mt-2"
             />
-            <div className="mt-2 p-3 border rounded-md bg-slate-950 text-green-400">
-              <Label className="text-xs text-slate-400">Preview:</Label>
-              <Card className="mt-2 h-fit bg-background">
-                <CardHeader className="pb-2">
-                  <Badge variant="outline" className="text-xs w-fit bg-green-50 text-green-700 border-green-200">
-                    💻 Code
-                  </Badge>
-                  {item.title && (
-                    <CardTitle className="text-sm font-semibold">{item.title}</CardTitle>
-                  )}
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="bg-slate-950 text-green-400 p-3 rounded-lg border border-slate-700 font-mono text-sm">
-                    <div 
-                      className="[&_p]:mb-1 [&_p]:leading-relaxed [&_span]:text-green-400"
-                      dangerouslySetInnerHTML={{ __html: item.content || "Type content to see preview..." }}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
           </div>
         )}
       </CardContent>

@@ -105,13 +105,13 @@ const styles = StyleSheet.create({
   codeContent: {
     fontSize: 10,
     fontFamily: 'Courier',
-    backgroundColor: '#f8fafc',
-    color: '#059669',
+    backgroundColor: '#f1f5f9',
+    color: '#475569',
     lineHeight: 1.4,
     padding: 6,
     borderRadius: 3,
     borderWidth: 1,
-    borderColor: '#d1fae5',
+    borderColor: '#cbd5e1',
     marginBottom: 3,
   },
   mathContent: {
