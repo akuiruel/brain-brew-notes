@@ -84,13 +84,15 @@ const Layout = ({ children }: LayoutProps) => {
           </div>
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1 text-xs">
-              {!isOnline || !isConnected && (
+              {!isOnline || !isConnected ? (
                 <>
                   <WifiOff className="h-3 w-3 text-red-500" />
                   <span className="text-red-600">
                     {!isOnline ? 'No Internet' : 'Disconnected'}
                   </span>
                 </>
+              ) : (
+                <span className="text-green-600 text-xs">Connected</span>
               )}
             </div>
           </div>

@@ -95,8 +95,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e2e8f0',
     marginTop: 3,
-    minHeight: 30,
-    flexWrap: 'wrap',
   },
   textContent: {
     fontSize: 11,
@@ -159,62 +157,48 @@ const getPdfPalette = (category: string): { headerBg: string; badgeBg: string; a
   }
 };
 
-// Helper function to parse HTML and extract text with proper formatting
-const parseHtmlContent = (html: string): Array<{ text: string; color?: string; bold?: boolean; italic?: boolean }> => {
-  const segments: Array<{ text: string; color?: string; bold?: boolean; italic?: boolean }> = [];
+// Helper function to parse HTML and extract text with proper line breaks
+const parseHtmlContent = (html: string): Array<{ text: string; color?: string }> => {
+  const segments: Array<{ text: string; color?: string }> = [];
   
   // Create a temporary div to parse HTML
   const tempDiv = document.createElement('div');
   tempDiv.innerHTML = html;
   
-  const processNode = (node: Node, parentFormatting: { bold?: boolean; italic?: boolean; color?: string } = {}): void => {
+  const processNode = (node: Node): void => {
     if (node.nodeType === Node.TEXT_NODE) {
       const text = node.textContent?.trim();
       if (text) {
-        segments.push({ 
-          text, 
-          bold: parentFormatting.bold,
-          italic: parentFormatting.italic,
-          color: parentFormatting.color
-        });
+        segments.push({ text });
       }
     } else if (node.nodeType === Node.ELEMENT_NODE) {
       const element = node as HTMLElement;
       const style = element.getAttribute('style');
-      let formatting = { ...parentFormatting };
-      
-      // Check for bold formatting
-      if (element.tagName === 'STRONG' || element.tagName === 'B' || 
-          (style && style.includes('font-weight: bold'))) {
-        formatting.bold = true;
-      }
-      
-      // Check for italic formatting
-      if (element.tagName === 'EM' || element.tagName === 'I' || 
-          (style && style.includes('font-style: italic'))) {
-        formatting.italic = true;
-      }
+      let color: string | undefined;
       
       // Extract color from inline style
       if (style) {
         const colorMatch = style.match(/color:\s*([^;]+)/i);
         if (colorMatch) {
-          formatting.color = colorMatch[1].trim();
+          color = colorMatch[1].trim();
         }
       }
       
       // Handle line breaks and paragraphs
-      if (element.tagName === 'BR') {
+      if (element.tagName === 'BR' || element.tagName === 'P') {
         segments.push({ text: '\n' });
-      } else if (element.tagName === 'P') {
-        if (segments.length > 0) {
-          segments.push({ text: '\n' });
-        }
       }
       
-      // Process child nodes with inherited formatting
+      // Process child nodes
       for (const child of Array.from(node.childNodes)) {
-        processNode(child, formatting);
+        if (child.nodeType === Node.TEXT_NODE) {
+          const text = child.textContent?.trim();
+          if (text) {
+            segments.push({ text, color });
+          }
+        } else {
+          processNode(child);
+        }
       }
       
       // Add line break after paragraphs
@@ -228,22 +212,18 @@ const parseHtmlContent = (html: string): Array<{ text: string; color?: string; b
   return segments;
 };
 
-// Helper function to render formatted text segments
-const renderFormattedText = (segments: Array<{ text: string; color?: string; bold?: boolean; italic?: boolean }>, baseStyle: any) => {
-  return segments.map((segment, index) => {
-    const style = {
-      ...baseStyle,
-      fontWeight: segment.bold ? 'bold' : 'normal',
-      fontStyle: segment.italic ? 'italic' : 'normal',
-      color: segment.color || baseStyle.color,
-    };
-    
-    return (
-      <Text key={index} style={style}>
-        {segment.text}
-      </Text>
-    );
-  });
+// Helper function to strip HTML and preserve basic formatting  
+const stripHtml = (html: string): string => {
+  return html
+    .replace(/<br\s*\/?>(?=.)/gi, '\n')
+    .replace(/<\/p>/gi, '\n')
+    .replace(/<p[^>]*>/gi, '')
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .trim();
 };
 
 const renderMathToText = (latex: string): string => {
@@ -263,52 +243,47 @@ const renderMathToText = (latex: string): string => {
     .replace(/\\/g, '');
 };
 
-// Split content segments into chunks that fit within page constraints
-const splitContentIntoChunks = (segments: Array<{ text: string; color?: string; bold?: boolean; italic?: boolean }>, maxLength: number = 600): Array<Array<{ text: string; color?: string; bold?: boolean; italic?: boolean }>> => {
-  const chunks: Array<Array<{ text: string; color?: string; bold?: boolean; italic?: boolean }>> = [];
-  let currentChunk: Array<{ text: string; color?: string; bold?: boolean; italic?: boolean }> = [];
-  let currentLength = 0;
+// Split long text into chunks that fit within page constraints
+const splitTextIntoChunks = (text: string, maxLength: number = 800): string[] => {
+  if (text.length <= maxLength) {
+    return [text];
+  }
   
-  for (const segment of segments) {
-    if (currentLength + segment.text.length <= maxLength) {
-      currentChunk.push(segment);
-      currentLength += segment.text.length;
+  const chunks: string[] = [];
+  const sentences = text.split(/(?<=[.!?])\s+/);
+  let currentChunk = '';
+  
+  for (const sentence of sentences) {
+    if ((currentChunk + sentence).length <= maxLength) {
+      currentChunk += (currentChunk ? ' ' : '') + sentence;
     } else {
-      if (currentChunk.length > 0) {
+      if (currentChunk) {
         chunks.push(currentChunk);
-        currentChunk = [segment];
-        currentLength = segment.text.length;
+        currentChunk = sentence;
       } else {
-        // If single segment is too long, split it
-        const words = segment.text.split(' ');
+        // If single sentence is too long, split by words
+        const words = sentence.split(' ');
         let wordChunk = '';
         for (const word of words) {
           if ((wordChunk + word).length <= maxLength) {
             wordChunk += (wordChunk ? ' ' : '') + word;
           } else {
             if (wordChunk) {
-              currentChunk.push({ ...segment, text: wordChunk });
-              chunks.push(currentChunk);
-              currentChunk = [];
+              chunks.push(wordChunk);
               wordChunk = word;
-              currentLength = word.length;
             } else {
-              currentChunk.push({ ...segment, text: word });
-              chunks.push(currentChunk);
-              currentChunk = [];
-              currentLength = 0;
+              chunks.push(word);
             }
           }
         }
         if (wordChunk) {
-          currentChunk.push({ ...segment, text: wordChunk });
-          currentLength = wordChunk.length;
+          currentChunk = wordChunk;
         }
       }
     }
   }
   
-  if (currentChunk.length > 0) {
+  if (currentChunk) {
     chunks.push(currentChunk);
   }
   
@@ -370,10 +345,10 @@ const CheatSheetPDF = ({ data, columns }: { data: CheatSheetData; columns: PdfCo
               {columnItems.map((columnContent, colIndex) => (
                 <View key={colIndex} style={styles.column}>
                   {columnContent.map((item) => {
-                    const contentSegments = parseHtmlContent(item.content);
-                    const contentChunks = splitContentIntoChunks(contentSegments, 400);
+                    const contentText = stripHtml(item.content);
+                    const textChunks = splitTextIntoChunks(contentText, 600);
                     
-                    return contentChunks.map((chunk, chunkIndex) => (
+                    return textChunks.map((chunk, chunkIndex) => (
                       <View key={`${item.id}-${chunkIndex}`} style={styles.section} wrap={false}>
                         {chunkIndex === 0 && item.title && (
                           <Text style={[styles.sectionTitle, { borderLeftColor: palette.accent }]}>
@@ -383,25 +358,25 @@ const CheatSheetPDF = ({ data, columns }: { data: CheatSheetData; columns: PdfCo
                         
                         <View style={styles.contentBox}>
                           {item.type === 'text' && (
-                            <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-                              {renderFormattedText(chunk, styles.textContent)}
-                            </View>
+                            <Text style={styles.textContent}>
+                              {chunk}
+                            </Text>
                           )}
                           
                           {item.type === 'math' && (
-                            <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-                              {renderFormattedText(chunk, styles.mathContent)}
-                            </View>
+                            <Text style={styles.mathContent}>
+                              {chunk}
+                            </Text>
                           )}
                           
                           {item.type === 'code' && (
-                            <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-                              {renderFormattedText(chunk, styles.codeContent)}
-                            </View>
+                            <Text style={styles.codeContent}>
+                              {chunk}
+                            </Text>
                           )}
                         </View>
                         
-                        {chunkIndex < contentChunks.length - 1 && (
+                        {chunkIndex < textChunks.length - 1 && (
                           <Text style={{ fontSize: 8, color: '#6b7280', textAlign: 'center', marginTop: 3 }}>
                             (continued...)
                           </Text>
