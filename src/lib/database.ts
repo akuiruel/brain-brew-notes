@@ -134,17 +134,21 @@ export const createCheatSheet = async (cheatSheetData: Omit<CheatSheetData, 'id'
     const user = await ensureAnonymousSession();
     console.log('User session ensured:', user.uid);
 
-    const docData = {
-      userId: user.uid,
-      title: cheatSheetData.title,
-      description: cheatSheetData.description,
-      category: cheatSheetData.category,
-      customCategory: cheatSheetData.customCategory,
-      content: cheatSheetData.content,
-      isPublic: cheatSheetData.isPublic || false,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    };
+    const docData: any = {
+  userId: user.uid,
+  title: cheatSheetData.title,
+  description: cheatSheetData.description,
+  category: cheatSheetData.category,
+  content: cheatSheetData.content,
+  isPublic: cheatSheetData.isPublic || false,
+  createdAt: serverTimestamp(),
+  updatedAt: serverTimestamp(),
+};
+
+// Only include customCategory if it has a value
+if (cheatSheetData.customCategory) {
+  docData.customCategory = cheatSheetData.customCategory;
+}
 
     console.log('Attempting to add document to Firestore with data:', docData);
     const docRef = await addDoc(collection(db, 'cheatSheets'), docData);
