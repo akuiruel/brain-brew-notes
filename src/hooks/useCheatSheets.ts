@@ -6,11 +6,16 @@ import {
   updateCheatSheet, 
   deleteCheatSheet,
   getCheatSheetById,
+  fetchCustomCategories,
+  createCustomCategory,
+  deleteCustomCategory,
+  CustomCategoryData,
 } from '@/lib/database';
 import type { CheatSheetData } from '@/lib/database';
 
 export const useCheatSheets = () => {
   const [cheatSheets, setCheatSheets] = useState<CheatSheetData[]>([]);
+  const [customCategories, setCustomCategories] = useState<CustomCategoryData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const { toast } = useToast();
@@ -55,6 +60,7 @@ export const useCheatSheets = () => {
     try {
       // Fetch latest data
       await loadCheatSheets();
+      await loadCustomCategories();
     } catch (error) {
       console.error('Error initializing data:', error);
       toast({
@@ -87,6 +93,17 @@ export const useCheatSheets = () => {
         description: "Failed to load cheat sheets. Please check your internet connection.",
         variant: "destructive",
       });
+    }
+  };
+
+  const loadCustomCategories = async () => {
+    if (!navigator.onLine) return;
+
+    try {
+      const categories = await fetchCustomCategories();
+      setCustomCategories(categories);
+    } catch (error) {
+      console.error('Error loading custom categories:', error);
     }
   };
 
@@ -169,8 +186,48 @@ export const useCheatSheets = () => {
     }
   };
 
+  const saveCustomCategory = async (data: Omit<CustomCategoryData, 'id' | 'userId' | 'createdAt'>) => {
+    if (!navigator.onLine) {
+      toast({
+        title: "No Internet Connection",
+        description: "Please connect to the internet to save your custom category",
+        variant: "destructive",
+      });
+      throw new Error('No internet connection');
+    }
+
+    try {
+      const newCategory = await createCustomCategory(data);
+      setCustomCategories(prev => [newCategory, ...prev]);
+      return newCategory;
+    } catch (error) {
+      console.error('Error saving custom category:', error);
+      throw error;
+    }
+  };
+
+  const deleteCustomCategoryData = async (id: string) => {
+    if (!navigator.onLine) {
+      toast({
+        title: "No Internet Connection",
+        description: "Please connect to the internet to delete your custom category",
+        variant: "destructive",
+      });
+      throw new Error('No internet connection');
+    }
+
+    try {
+      await deleteCustomCategory(id);
+      setCustomCategories(prev => prev.filter(cat => cat.id !== id));
+    } catch (error) {
+      console.error('Error deleting custom category:', error);
+      throw error;
+    }
+  };
+
   return {
     cheatSheets,
+    customCategories,
     isLoading,
     isOnline,
     saveCheatSheet,
@@ -178,5 +235,8 @@ export const useCheatSheets = () => {
     deleteCheatSheet: deleteCheatSheetData,
     getCheatSheetById: getCheatSheetByIdData,
     refreshCheatSheets: loadCheatSheets,
+    saveCustomCategory,
+    deleteCustomCategory: deleteCustomCategoryData,
+    refreshCustomCategories: loadCustomCategories,
   };
 };

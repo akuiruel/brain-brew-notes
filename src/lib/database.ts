@@ -26,12 +26,22 @@ export interface CheatSheetData {
   title: string;
   description?: string;
   category: CheatSheetCategory;
+  customCategory?: string; // For custom category name
   content: {
     items: ContentItem[];
   };
   isPublic?: boolean;
   createdAt?: Date | Timestamp;
   updatedAt?: Date | Timestamp;
+}
+
+export interface CustomCategoryData {
+  id?: string;
+  userId?: string;
+  name: string;
+  color: string;
+  icon: string;
+  createdAt?: Date | Timestamp;
 }
 
 // Get current user session
@@ -69,10 +79,24 @@ const convertFirestoreDoc = (doc: any): CheatSheetData => {
     title: data.title,
     description: data.description,
     category: data.category,
+    customCategory: data.customCategory,
     content: data.content,
     isPublic: data.isPublic || false,
     createdAt: data.createdAt?.toDate() || new Date(),
     updatedAt: data.updatedAt?.toDate() || new Date(),
+  };
+};
+
+// Convert Firestore document to CustomCategoryData
+const convertCustomCategoryDoc = (doc: any): CustomCategoryData => {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    userId: data.userId,
+    name: data.name,
+    color: data.color,
+    icon: data.icon,
+    createdAt: data.createdAt?.toDate() || new Date(),
   };
 };
 
@@ -188,4 +212,60 @@ export const getCheatSheetById = async (id: string): Promise<CheatSheetData | nu
   }
   
   return convertFirestoreDoc(docSnap);
+};
+
+// Custom Categories functions
+export const fetchCustomCategories = async (): Promise<CustomCategoryData[]> => {
+  const user = await ensureAnonymousSession();
+  try {
+    const q = query(
+      collection(db, 'customCategories'),
+      where('userId', '==', user.uid),
+      orderBy('createdAt', 'desc')
+    );
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(convertCustomCategoryDoc);
+  } catch (err: any) {
+    console.warn('[fetchCustomCategories] Falling back to client-side sort', err);
+    const fallbackQ = query(
+      collection(db, 'customCategories'),
+      where('userId', '==', user.uid)
+    );
+    const fallbackSnap = await getDocs(fallbackQ);
+    const items = fallbackSnap.docs.map(convertCustomCategoryDoc);
+    return items.sort((a, b) => {
+      const ta = a.createdAt instanceof Date ? a.createdAt.getTime() : (a.createdAt as any)?.toMillis?.() ?? 0;
+      const tb = b.createdAt instanceof Date ? b.createdAt.getTime() : (b.createdAt as any)?.toMillis?.() ?? 0;
+      return tb - ta;
+    });
+  }
+};
+
+export const createCustomCategory = async (categoryData: Omit<CustomCategoryData, 'id' | 'userId' | 'createdAt'>): Promise<CustomCategoryData> => {
+  const user = await ensureAnonymousSession();
+  
+  const docData = {
+    userId: user.uid,
+    name: categoryData.name,
+    color: categoryData.color,
+    icon: categoryData.icon,
+    createdAt: serverTimestamp(),
+  };
+
+  const docRef = await addDoc(collection(db, 'customCategories'), docData);
+  
+  const createdDoc = await getDoc(docRef);
+  if (!createdDoc.exists()) {
+    throw new Error('Failed to retrieve created custom category');
+  }
+  
+  return convertCustomCategoryDoc(createdDoc);
+};
+
+export const deleteCustomCategory = async (id: string): Promise<boolean> => {
+  const user = await ensureAnonymousSession();
+  
+  const docRef = doc(db, 'customCategories', id);
+  await deleteDoc(docRef);
+  return true;
 };

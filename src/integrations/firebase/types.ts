@@ -23,7 +23,16 @@ export interface ContentItem {
   color?: string;
 }
 
-export type CheatSheetCategory = 'mathematics' | 'software' | 'coding' | 'study' | 'other';
+export type CheatSheetCategory = 'mathematics' | 'software' | 'coding' | 'study' | 'other' | 'custom';
 
 // Firestore document data (without id)
 export type CheatSheetData = Omit<CheatSheet, 'id'>;
+
+export interface CustomCategory {
+  id: string;
+  name: string;
+  color: string;
+  icon: string;
+  userId: string;
+  createdAt: Date | any;
+}

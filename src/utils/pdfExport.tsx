@@ -1,5 +1,4 @@
 import { Document, Page, Text, View, StyleSheet, pdf } from '@react-pdf/renderer';
-import katex from 'katex';
 
 interface ContentItem {
   id: string;
@@ -13,6 +12,7 @@ interface CheatSheetData {
   title: string;
   description?: string;
   category: string;
+  customCategory?: string;
   content: {
     items: ContentItem[];
   };
@@ -158,18 +158,18 @@ const getPdfPalette = (category: string): { headerBg: string; badgeBg: string; a
 };
 
 // Helper function to parse HTML and extract formatted content
-const parseHtmlContent = (html: string): Array<{ text: string; bold?: boolean; color?: string }> => {
-  const segments: Array<{ text: string; bold?: boolean; color?: string }> = [];
+const parseHtmlContent = (html: string): Array<{ text: string; bold?: boolean; italic?: boolean; color?: string }> => {
+  const segments: Array<{ text: string; bold?: boolean; italic?: boolean; color?: string }> = [];
   
   // Create a temporary div to parse HTML
   const tempDiv = document.createElement('div');
   tempDiv.innerHTML = html;
   
-  const processNode = (node: Node, parentBold = false): void => {
+  const processNode = (node: Node, parentBold = false, parentItalic = false): void => {
     if (node.nodeType === Node.TEXT_NODE) {
       const text = node.textContent?.trim();
       if (text) {
-        segments.push({ text, bold: parentBold });
+        segments.push({ text, bold: parentBold, italic: parentItalic });
       }
     } else if (node.nodeType === Node.ELEMENT_NODE) {
       const element = node as HTMLElement;
@@ -178,6 +178,7 @@ const parseHtmlContent = (html: string): Array<{ text: string; bold?: boolean; c
       
       let color: string | undefined;
       let isBold = parentBold;
+      let isItalic = parentItalic;
       
       // Check for bold styling
       if (tagName === 'B' || tagName === 'STRONG' || 
@@ -185,11 +186,27 @@ const parseHtmlContent = (html: string): Array<{ text: string; bold?: boolean; c
         isBold = true;
       }
       
+      // Check for italic styling
+      if (tagName === 'I' || tagName === 'EM' || 
+          (style && (style.includes('font-style: italic') || style.includes('font-style:italic')))) {
+        isItalic = true;
+      }
+      
       // Extract color from inline style
       if (style) {
         const colorMatch = style.match(/color:\s*([^;]+)/i);
         if (colorMatch) {
           color = colorMatch[1].trim();
+          // Convert hex colors to RGB if needed
+          if (color.startsWith('#')) {
+            const hex = color.slice(1);
+            if (hex.length === 6) {
+              const r = parseInt(hex.slice(0, 2), 16);
+              const g = parseInt(hex.slice(2, 4), 16);
+              const b = parseInt(hex.slice(4, 6), 16);
+              color = `rgb(${r}, ${g}, ${b})`;
+            }
+          }
         }
       }
       
@@ -207,7 +224,7 @@ const parseHtmlContent = (html: string): Array<{ text: string; bold?: boolean; c
       
       // Process child nodes
       for (const child of Array.from(node.childNodes)) {
-        processNode(child, isBold);
+        processNode(child, isBold, isItalic);
       }
       
       // Add line break after paragraphs
@@ -313,7 +330,7 @@ const distributeItemsToColumns = (items: ContentItem[], columns: PdfColumnCount)
 };
 
 const CheatSheetPDF = ({ data, columns }: { data: CheatSheetData; columns: PdfColumnCount }) => {
-  const palette = getPdfPalette(data.category);
+  const palette = getPdfPalette(data.customCategory ? 'other' : data.category);
   
   // Estimate content size and split into pages more intelligently
   const maxItemsPerPage = columns === 2 ? 8 : 12;
@@ -337,7 +354,7 @@ const CheatSheetPDF = ({ data, columns }: { data: CheatSheetData; columns: PdfCo
                   <Text style={styles.description}>{data.description}</Text>
                 )}
                 <Text style={[styles.category, { backgroundColor: palette.badgeBg }]}>
-                  {data.category.toUpperCase()}
+                  {(data.customCategory || data.category).toUpperCase()}
                 </Text>
               </View>
             )}
@@ -376,8 +393,9 @@ const CheatSheetPDF = ({ data, columns }: { data: CheatSheetData; columns: PdfCo
                                   key={segIndex}
                                   style={[
                                     styles.textContent,
-                                    segment.bold && { fontWeight: 'bold' },
-                                    segment.color && { color: segment.color }
+                                    segment.bold && { fontFamily: 'Helvetica-Bold' },
+                                    segment.italic && { fontFamily: segment.bold ? 'Helvetica-BoldOblique' : 'Helvetica-Oblique' },
+                                    segment.color && { color: segment.color },
                                   ]}
                                 >
                                   {segment.text}
