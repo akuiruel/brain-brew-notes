@@ -17,6 +17,7 @@ import type { ContentItem, CheatSheetCategory } from '@/integrations/firebase/ty
 import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import CategoryManager from '@/components/CategoryManager';
 
 const moveItem = <T,>(array: T[], fromIndex: number, toIndex: number): T[] => {
   const newArray = array.slice();
@@ -133,13 +134,14 @@ const SortableItem = ({
 const CreateCheatSheet = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { saveCheatSheet, isOnline } = useCheatSheets();
+  const { saveCheatSheet, isOnline, customCategories } = useCheatSheets();
   
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState<CheatSheetCategory | ''>('');
   const [contentItems, setContentItems] = useState<ContentItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [customCategoryId, setCustomCategoryId] = useState<string>('');
   const displayItems = contentItems;
   const handlePositionChange = (id: string, newPositionOneBased: number) => {
     const oldIndex = displayItems.findIndex((i) => i.id === id);
