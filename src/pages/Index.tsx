@@ -14,8 +14,17 @@ import { Plus, Edit, Trash2, Eye, Search, Download, FileText, Calculator, Code, 
 import { exportToPDF } from '@/utils/pdfExport';
 import { format } from 'date-fns';
 
+// Define preset categories
+const presetCategories = [
+  { id: 'mathematics', name: 'Mathematics', icon: '🧮', color: '#3b82f6' },
+  { id: 'software', name: 'Software', icon: '💻', color: '#10b981' },
+  { id: 'coding', name: 'Coding', icon: '🧠', color: '#8b5cf6' },
+  { id: 'study', name: 'Study', icon: '📚', color: '#f59e0b' },
+  { id: 'other', name: 'Other', icon: '🏷️', color: '#64748b' },
+];
+
 const Index = () => {
-  const { cheatSheets, isLoading, isOnline, deleteCheatSheet } = useCheatSheets();
+  const { cheatSheets, isLoading, isOnline, deleteCheatSheet, customCategories } = useCheatSheets();
   const { toast } = useToast();
   const [selectedSheet, setSelectedSheet] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -26,7 +35,18 @@ const Index = () => {
   const filteredSheets = cheatSheets.filter(sheet => {
     const matchesSearch = sheet.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          sheet.description?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = categoryFilter === 'all' || sheet.category === categoryFilter;
+    
+    let matchesCategory = categoryFilter === 'all';
+    if (!matchesCategory) {
+      if (categoryFilter.startsWith('custom-')) {
+        const customCategoryId = categoryFilter.replace('custom-', '');
+        const customCat = customCategories.find(cat => cat.id === customCategoryId);
+        matchesCategory = sheet.customCategory === customCat?.name;
+      } else {
+        matchesCategory = sheet.category === categoryFilter;
+      }
+    }
+    
     return matchesSearch && matchesCategory;
   });
 
@@ -62,24 +82,21 @@ const Index = () => {
     }
   };
 
-  const getCategoryIcon = (category: string) => {
-    switch (category) {
-      case 'mathematics': return <Calculator className="h-4 w-4" />;
-      case 'coding': return <Code className="h-4 w-4" />;
-      case 'software': return <FileText className="h-4 w-4" />;
-      case 'study': return <BookOpen className="h-4 w-4" />;
-      default: return <Folder className="h-4 w-4" />;
+  const getCategoryIcon = (category: string, customCategoryName?: string) => {
+    if (customCategoryName) {
+      const customCat = customCategories.find(cat => cat.name === customCategoryName);
+      return customCat ? <span className="text-sm">{customCat.icon}</span> : <span className="text-sm">🏷️</span>;
     }
+    
+    const presetCat = presetCategories.find(cat => cat.id === category);
+    return presetCat ? <span className="text-sm">{presetCat.icon}</span> : <Folder className="h-4 w-4" />;
   };
 
-  const getCustomCategoryIcon = (customCategoryName?: string) => {
-    if (!customCategoryName) return <Folder className="h-4 w-4" />;
-    const customCat = cheatSheets.find(sheet => sheet.customCategory === customCategoryName);
-    // For now, return a default icon since we don't store icon in the cheat sheet
-    return <span className="text-sm">🏷️</span>;
-  };
-
-  const getCategoryColor = (category: string) => {
+  const getCategoryColor = (category: string, customCategoryName?: string) => {
+    if (customCategoryName) {
+      return 'bg-primary/10 text-primary border-primary/20';
+    }
+    
     switch (category) {
       case 'mathematics': return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'coding': return 'bg-green-100 text-green-800 border-green-200';
@@ -89,7 +106,18 @@ const Index = () => {
     }
   };
 
-  const getCategoryTheme = (category: string) => {
+  const getCategoryTheme = (category: string, customCategoryName?: string) => {
+    if (customCategoryName) {
+      const customCat = customCategories.find(cat => cat.name === customCategoryName);
+      const color = customCat?.color || '#64748b';
+      return { 
+        headerBg: 'from-primary/5 to-primary/10', 
+        iconBg: 'bg-primary', 
+        border: 'border-primary/20',
+        customColor: color
+      };
+    }
+    
     switch (category) {
       case 'mathematics':
         return { headerBg: 'from-blue-50 to-blue-100', iconBg: 'bg-blue-600', border: 'border-blue-200' };
@@ -207,11 +235,33 @@ const Index = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Categories</SelectItem>
-              <SelectItem value="mathematics">Mathematics</SelectItem>
-              <SelectItem value="software">Software</SelectItem>
-              <SelectItem value="coding">Coding</SelectItem>
-              <SelectItem value="study">Study</SelectItem>
-              <SelectItem value="other">Other</SelectItem>
+              
+              {/* Preset categories */}
+              {presetCategories.map((cat) => (
+                <SelectItem key={cat.id} value={cat.id}>
+                  <div className="flex items-center gap-2">
+                    <span>{cat.icon}</span>
+                    <span>{cat.name}</span>
+                  </div>
+                </SelectItem>
+              ))}
+              
+              {/* Custom categories */}
+              {customCategories.length > 0 && (
+                <>
+                  <div className="px-2 py-1 text-xs font-semibold text-muted-foreground border-t">
+                    Custom Categories
+                  </div>
+                  {customCategories.map((cat) => (
+                    <SelectItem key={`custom-${cat.id}`} value={`custom-${cat.id}`}>
+                      <div className="flex items-center gap-2">
+                        <span>{cat.icon}</span>
+                        <span>{cat.name}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </>
+              )}
             </SelectContent>
           </Select>
           <Select value={String(pdfColumns)} onValueChange={(v) => setPdfColumns(v === '2' ? 2 : 3)}>
@@ -253,7 +303,7 @@ const Index = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredSheets.map((sheet) => {
               const displayCategory = sheet.customCategory || sheet.category;
-              const theme = getCategoryTheme(sheet.category);
+              const theme = getCategoryTheme(sheet.category, sheet.customCategory);
               return (
                 <Card key={sheet.id} className="hover:shadow-lg transition-shadow group">
                   <CardHeader className="pb-3">
@@ -262,7 +312,7 @@ const Index = () => {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-3 min-w-0">
                             <div className={`h-9 w-9 rounded-lg flex items-center justify-center text-white ${theme.iconBg}`}>
-                              {sheet.customCategory ? getCustomCategoryIcon(sheet.customCategory) : getCategoryIcon(sheet.category)}
+                              {getCategoryIcon(sheet.category, sheet.customCategory)}
                             </div>
                             <CardTitle className="text-lg font-semibold truncate">
                               {sheet.title}
@@ -271,10 +321,10 @@ const Index = () => {
                           <div className="flex items-center gap-2 mt-2">
                             <Badge 
                               variant="outline" 
-                              className={`text-xs ${getCategoryColor(sheet.customCategory ? 'other' : sheet.category)}`}
+                              className={`text-xs ${getCategoryColor(sheet.category, sheet.customCategory)}`}
                             >
                               <span className="mr-1">
-                                {sheet.customCategory ? getCustomCategoryIcon(sheet.customCategory) : getCategoryIcon(sheet.category)}
+                                {getCategoryIcon(sheet.category, sheet.customCategory)}
                               </span>
                               {displayCategory.charAt(0).toUpperCase() + displayCategory.slice(1)}
                             </Badge>

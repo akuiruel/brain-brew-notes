@@ -17,6 +17,8 @@ import type { ContentItem, CheatSheetCategory } from '@/integrations/firebase/ty
 import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import EnhancedCategoryManager from '@/components/EnhancedCategoryManager';
+import CategoryDropdown from '@/components/CategoryDropdown';
 
 const moveItem = <T,>(array: T[], fromIndex: number, toIndex: number): T[] => {
 	const newArray = array.slice();
@@ -133,7 +135,7 @@ const EditCheatSheet = () => {
 	const navigate = useNavigate();
 	const { id } = useParams();
 	const { toast } = useToast();
-	const { getCheatSheetById, updateCheatSheet, isOnline } = useCheatSheets();
+	const { getCheatSheetById, updateCheatSheet, isOnline, customCategories } = useCheatSheets();
 	
 	const [title, setTitle] = useState('');
 	const [description, setDescription] = useState('');
@@ -141,6 +143,7 @@ const EditCheatSheet = () => {
 	const [contentItems, setContentItems] = useState<ContentItem[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [isFetching, setIsFetching] = useState(true);
+	const [customCategoryId, setCustomCategoryId] = useState<string>('');
 	const displayItems = contentItems;
 	const handlePositionChange = (id: string, newPositionOneBased: number) => {
 		const oldIndex = displayItems.findIndex((i) => i.id === id);
@@ -374,44 +377,21 @@ const EditCheatSheet = () => {
 								
 								<div>
 									<Label htmlFor="category">Category</Label>
-									<Select 
-										value={category === 'custom' ? 'custom' : category} 
-										onValueChange={(value) => handleCategorySelect(value)}
-									>
-										<SelectTrigger>
-											<SelectValue placeholder="Select category">
-												{category === 'custom' && customCategoryId ? (
-													<div className="flex items-center gap-2">
-														<span>{customCategories.find(cat => cat.id === customCategoryId)?.icon}</span>
-														<span>{customCategories.find(cat => cat.id === customCategoryId)?.name}</span>
-													</div>
-												) : category ? (
-													category.charAt(0).toUpperCase() + category.slice(1)
-												) : (
-													"Select category"
-												)}
-											</SelectValue>
-										</SelectTrigger>
-										<SelectContent>
-											<SelectItem value="mathematics">Mathematics</SelectItem>
-											<SelectItem value="software">Software</SelectItem>
-											<SelectItem value="coding">Coding</SelectItem>
-											<SelectItem value="study">Study</SelectItem>
-											<SelectItem value="other">Other</SelectItem>
-											<SelectItem value="custom">Custom Category</SelectItem>
-										</SelectContent>
-									</Select>
+									<CategoryDropdown
+										value={category === 'custom' ? 'custom' : category}
+										onValueChange={handleCategorySelect}
+										selectedCustomCategory={customCategoryId}
+										placeholder="Select category"
+									/>
 								</div>
 
-								{category === 'custom' && (
-									<div>
-										<CategoryManager 
-											onCategorySelect={handleCategorySelect}
-											selectedCategory={category}
-											selectedCustomCategory={customCategoryId}
-										/>
-									</div>
-								)}
+								<div>
+									<EnhancedCategoryManager 
+										onCategorySelect={handleCategorySelect}
+										selectedCategory={category}
+										selectedCustomCategory={customCategoryId}
+									/>
+								</div>
 
 								<div>
 									<Label htmlFor="description">Description</Label>
