@@ -409,37 +409,29 @@ const CheatSheetPDF = ({ data, columns }: { data: CheatSheetData; columns: PdfCo
                           </Text>
                         )}
                         
-                        <View style={styles.contentBox}>
-                          {item.type === 'text' && (
-                            <View>
-                              {parseHtmlContent(item.content).map((segment, segIndex) => {
-                                if (segment.text === '\n') {
-                                  return <Text key={segIndex} style={{ fontSize: 6 }}>{'\n'}</Text>;
-                                }
-                                
-                                let textStyle = styles.textContent;
-                                if (segment.bold && segment.italic) {
-                                  textStyle = styles.boldItalicText;
-                                } else if (segment.bold) {
-                                  textStyle = styles.boldText;
-                                } else if (segment.italic) {
-                                  textStyle = styles.italicText;
-                                }
-                                
-                                return (
-                                <Text 
-                                  key={segIndex} 
-                                  style={[
-                                    textStyle,
-                                    segment.color && { color: segment.color },
-                                  ]}
-                                >
-                                  {segment.text}
-                                </Text>
-                                );
-                              })}
-                            </View>
-                          )}
+                         <View style={styles.contentBox}>
+                           {item.type === 'text' && (
+                             <Text style={styles.textContent}>
+                               {parseHtmlContent(chunk).map((segment, segIndex) => {
+                                 if (segment.text === '\n') {
+                                   return '\n';
+                                 }
+                                 
+                                 return (
+                                   <Text 
+                                     key={segIndex} 
+                                     style={[
+                                       segment.bold && { fontWeight: 'bold' },
+                                       segment.italic && { fontStyle: 'italic' },
+                                       segment.color && { color: segment.color },
+                                     ]}
+                                   >
+                                     {segment.text}
+                                   </Text>
+                                 );
+                               })}
+                             </Text>
+                           )}
                           
                           {item.type === 'math' && (
                             <Text style={styles.mathContent}>
