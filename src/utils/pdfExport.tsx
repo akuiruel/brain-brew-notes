@@ -191,7 +191,7 @@ const getPdfPalette = (category: string): { headerBg: string; badgeBg: string; a
 };
 
 // Helper function to parse HTML and extract formatted content
-const parseHtmlContent = (html: string): Array<{ text: string; bold?: boolean; italic?: boolean; color?: string; isNewLine?: boolean }> => {
+const parseHtmlContent = (html: string): Array<{ text: string; bold?: boolean; italic?: boolean; color?: string }> => {
   const segments: Array<{ text: string; bold?: boolean; italic?: boolean; color?: string }> = [];
   
   // Create a temporary div to parse HTML
@@ -201,7 +201,7 @@ const parseHtmlContent = (html: string): Array<{ text: string; bold?: boolean; i
   const processNode = (node: Node, parentBold = false, parentItalic = false, parentColor?: string): void => {
     if (node.nodeType === Node.TEXT_NODE) {
       const text = node.textContent || '';
-      if (text) {
+      if (text.trim()) {
         segments.push({ 
           text, 
           bold: parentBold, 
@@ -218,9 +218,11 @@ const parseHtmlContent = (html: string): Array<{ text: string; bold?: boolean; i
       let isBold = parentBold;
       let isItalic = parentItalic;
       
-      // Check for bold styling
+      // Check for bold styling - more comprehensive detection
       if (tagName === 'B' || tagName === 'STRONG' || 
-          (style && (style.includes('font-weight: bold') || style.includes('font-weight:bold') || style.includes('font-weight: 700')))) {
+          (style && (style.includes('font-weight: bold') || style.includes('font-weight:bold') || 
+                     style.includes('font-weight: 700') || style.includes('font-weight:700') ||
+                     style.includes('font-weight: bolder')))) {
         isBold = true;
       }
       
@@ -244,10 +246,8 @@ const parseHtmlContent = (html: string): Array<{ text: string; bold?: boolean; i
         return;
       }
       
-      if (tagName === 'P') {
-        if (segments.length > 0) {
-          segments.push({ text: '\n' });
-        }
+      if (tagName === 'P' && segments.length > 0) {
+        segments.push({ text: '\n' });
       }
       
       // Process child nodes
@@ -263,7 +263,7 @@ const parseHtmlContent = (html: string): Array<{ text: string; bold?: boolean; i
   };
   
   processNode(tempDiv);
-  return segments;
+  return segments.filter(seg => seg.text.trim() !== '');
 };
 
 // Helper function to strip HTML and preserve basic formatting  
@@ -297,51 +297,56 @@ const renderMathToText = (latex: string): string => {
     .replace(/\\/g, '');
 };
 
-// Split long text into chunks that fit within page constraints
-const splitTextIntoChunks = (text: string, maxLength: number = 800): string[] => {
-  if (text.length <= maxLength) {
-    return [text];
+// Split HTML content into chunks while preserving formatting
+const splitHtmlIntoChunks = (html: string, maxLength: number = 1000): string[] => {
+  if (html.length <= maxLength) {
+    return [html];
   }
   
   const chunks: string[] = [];
-  const sentences = text.split(/(?<=[.!?])\s+/);
-  let currentChunk = '';
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = html;
+  
+  const textContent = tempDiv.textContent || tempDiv.innerText || '';
+  if (textContent.length <= maxLength) {
+    return [html];
+  }
+  
+  // Split by sentences first
+  const sentences = textContent.split(/(?<=[.!?])\s+/);
+  let currentLength = 0;
+  let currentHtml = '';
   
   for (const sentence of sentences) {
-    if ((currentChunk + sentence).length <= maxLength) {
-      currentChunk += (currentChunk ? ' ' : '') + sentence;
+    if (currentLength + sentence.length <= maxLength) {
+      // Find this sentence in the HTML and extract with formatting
+      const sentenceStart = textContent.indexOf(sentence, currentLength);
+      if (sentenceStart !== -1) {
+        currentLength += sentence.length;
+        // This is a simplified approach - for more complex cases, 
+        // we'd need a more sophisticated HTML parsing
+        if (!currentHtml) {
+          currentHtml = html;
+        }
+      }
     } else {
-      if (currentChunk) {
-        chunks.push(currentChunk);
-        currentChunk = sentence;
+      if (currentHtml) {
+        chunks.push(currentHtml);
+        currentHtml = '';
+        currentLength = sentence.length;
       } else {
-        // If single sentence is too long, split by words
-        const words = sentence.split(' ');
-        let wordChunk = '';
-        for (const word of words) {
-          if ((wordChunk + word).length <= maxLength) {
-            wordChunk += (wordChunk ? ' ' : '') + word;
-          } else {
-            if (wordChunk) {
-              chunks.push(wordChunk);
-              wordChunk = word;
-            } else {
-              chunks.push(word);
-            }
-          }
-        }
-        if (wordChunk) {
-          currentChunk = wordChunk;
-        }
+        // Handle very long sentences
+        chunks.push(html);
+        break;
       }
     }
   }
   
-  if (currentChunk) {
-    chunks.push(currentChunk);
+  if (currentHtml && chunks.length === 0) {
+    chunks.push(html);
   }
   
-  return chunks;
+  return chunks.length > 0 ? chunks : [html];
 };
 
 // Distribute items across columns more evenly
@@ -398,62 +403,60 @@ const CheatSheetPDF = ({ data, columns }: { data: CheatSheetData; columns: PdfCo
             <View style={styles.columnsContainer}>
               {columnItems.map((columnContent, colIndex) => (
                 <View key={colIndex} style={styles.column}>
-                  {columnContent.map((item) => {
-                    const textChunks = splitTextIntoChunks(stripHtml(item.content), 600);
-                    
-                    return textChunks.map((chunk, chunkIndex) => (
-                      <View key={`${item.id}-${chunkIndex}`} style={styles.section} wrap={false}>
-                        {chunkIndex === 0 && item.title && (
-                          <Text style={[styles.sectionTitle, { borderLeftColor: palette.accent }]}>
-                            {item.title}
-                          </Text>
+                  {columnContent.map((item) => (
+                    <View key={item.id} style={styles.section} wrap={false}>
+                      {item.title && (
+                        <Text style={[styles.sectionTitle, { borderLeftColor: palette.accent }]}>
+                          {item.title}
+                        </Text>
+                      )}
+                      
+                      <View style={styles.contentBox}>
+                        {item.type === 'text' && (
+                          <View>
+                            {parseHtmlContent(item.content).map((segment, segIndex) => {
+                              if (segment.text === '\n') {
+                                return <Text key={segIndex}>{'\n'}</Text>;
+                              }
+                              
+                              let textStyle = styles.textContent;
+                              if (segment.bold && segment.italic) {
+                                textStyle = styles.boldItalicText;
+                              } else if (segment.bold) {
+                                textStyle = styles.boldText;
+                              } else if (segment.italic) {
+                                textStyle = styles.italicText;
+                              }
+                              
+                              return (
+                                <Text 
+                                  key={segIndex} 
+                                  style={[
+                                    textStyle,
+                                    segment.color && { color: segment.color },
+                                  ]}
+                                >
+                                  {segment.text}
+                                </Text>
+                              );
+                            })}
+                          </View>
                         )}
-                        
-                         <View style={styles.contentBox}>
-                           {item.type === 'text' && (
-                             <Text style={styles.textContent}>
-                               {parseHtmlContent(chunk).map((segment, segIndex) => {
-                                 if (segment.text === '\n') {
-                                   return '\n';
-                                 }
-                                 
-                                 return (
-                                   <Text 
-                                     key={segIndex} 
-                                     style={[
-                                       segment.bold && { fontWeight: 'bold' },
-                                       segment.italic && { fontStyle: 'italic' },
-                                       segment.color && { color: segment.color },
-                                     ]}
-                                   >
-                                     {segment.text}
-                                   </Text>
-                                 );
-                               })}
-                             </Text>
-                           )}
-                          
-                          {item.type === 'math' && (
-                            <Text style={styles.mathContent}>
-                              {renderMathToText(stripHtml(item.content))}
-                            </Text>
-                          )}
-                          
-                          {item.type === 'code' && (
-                            <Text style={styles.codeContent}>
-                              {stripHtml(item.content)}
-                            </Text>
-                          )}
-                        </View>
-                        
-                        {chunkIndex < textChunks.length - 1 && (
-                          <Text style={{ fontSize: 8, color: '#6b7280', textAlign: 'center', marginTop: 3 }}>
-                            (continued...)
-                          </Text>
-                        )}
-                      </View>
-                    ));
-                  })}
+                       
+                       {item.type === 'math' && (
+                         <Text style={styles.mathContent}>
+                           {renderMathToText(stripHtml(item.content))}
+                         </Text>
+                       )}
+                       
+                       {item.type === 'code' && (
+                         <Text style={styles.codeContent}>
+                           {stripHtml(item.content)}
+                         </Text>
+                       )}
+                     </View>
+                   </View>
+                  ))}
                 </View>
               ))}
             </View>
