@@ -211,24 +211,33 @@ const parseHtmlContent = (html: string): Array<{ text: string; bold?: boolean; i
       }
     } else if (node.nodeType === Node.ELEMENT_NODE) {
       const element = node as HTMLElement;
-      const style = element.getAttribute('style');
+      const style = element.getAttribute('style') || '';
+      const className = element.getAttribute('class') || '';
       const tagName = element.tagName.toUpperCase();
       
       let color: string | undefined = parentColor;
       let isBold = parentBold;
       let isItalic = parentItalic;
       
-      // Check for bold styling - more comprehensive detection
+      // Check for bold styling - comprehensive detection including Quill classes
       if (tagName === 'B' || tagName === 'STRONG' || 
-          (style && (style.includes('font-weight: bold') || style.includes('font-weight:bold') || 
-                     style.includes('font-weight: 700') || style.includes('font-weight:700') ||
-                     style.includes('font-weight: bolder')))) {
+          className.includes('ql-font-weight-bold') ||
+          className.includes('bold') ||
+          style.includes('font-weight: bold') || 
+          style.includes('font-weight:bold') || 
+          style.includes('font-weight: 700') || 
+          style.includes('font-weight:700') ||
+          style.includes('font-weight: bolder') ||
+          style.includes('font-weight:bolder')) {
         isBold = true;
       }
       
-      // Check for italic styling
+      // Check for italic styling - including Quill classes
       if (tagName === 'I' || tagName === 'EM' || 
-          (style && (style.includes('font-style: italic') || style.includes('font-style:italic')))) {
+          className.includes('ql-font-style-italic') ||
+          className.includes('italic') ||
+          style.includes('font-style: italic') || 
+          style.includes('font-style:italic')) {
         isItalic = true;
       }
       
