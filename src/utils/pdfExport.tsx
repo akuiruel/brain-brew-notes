@@ -4,10 +4,10 @@ import { Document, Page, Text, View, StyleSheet, pdf, Font } from '@react-pdf/re
 Font.register({
   family: 'Helvetica',
   fonts: [
-    { src: 'https://fonts.gstatic.com/s/opensans/v40/memSYaGs126MiZpBA-UvWbX2vVnXBbObj2OVZyOOSr4dVJWUgsjZ0B4gaVc.woff2', fontWeight: 'normal' },
-    { src: 'https://fonts.gstatic.com/s/opensans/v40/memSYaGs126MiZpBA-UvWbX2vVnXBbObj2OVZyOOSr4dVJWUgsg-1x4gaVc.woff2', fontWeight: 'bold' },
-    { src: 'https://fonts.gstatic.com/s/opensans/v40/memQYaGs126MiZpBA-UFUIcVXSCEkx2cmqvXlWq8tWZ0Pw86hd0Rk8ZkWVAexQ.woff2', fontStyle: 'italic' },
-    { src: 'https://fonts.gstatic.com/s/opensans/v40/memQYaGs126MiZpBA-UFUIcVXSCEkx2cmqvXlWq8tWZ0Pw86hd0RkxZkWVAexQ.woff2', fontWeight: 'bold', fontStyle: 'italic' },
+    { fontWeight: 'normal' },
+    { fontWeight: 'bold' },
+    { fontStyle: 'italic' },
+    { fontWeight: 'bold', fontStyle: 'italic' },
   ]
 });
 
@@ -112,18 +112,22 @@ const styles = StyleSheet.create({
     lineHeight: 1.5,
     color: '#1f2937',
     marginBottom: 2,
+    fontFamily: 'Helvetica',
+    fontWeight: 'normal',
   },
   boldText: {
     fontSize: 11,
     lineHeight: 1.5,
     color: '#1f2937',
-    fontWeight: 'bold',
+    fontFamily: 'Helvetica',
+    fontWeight: 700,
     marginBottom: 2,
   },
   italicText: {
     fontSize: 11,
     lineHeight: 1.5,
     color: '#1f2937',
+    fontFamily: 'Helvetica',
     fontStyle: 'italic',
     marginBottom: 2,
   },
@@ -131,7 +135,8 @@ const styles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 1.5,
     color: '#1f2937',
-    fontWeight: 'bold',
+    fontFamily: 'Helvetica',
+    fontWeight: 700,
     fontStyle: 'italic',
     marginBottom: 2,
   },
@@ -194,26 +199,6 @@ const getPdfPalette = (category: string): { headerBg: string; badgeBg: string; a
 const parseHtmlContent = (html: string): Array<{ text: string; bold?: boolean; italic?: boolean; color?: string }> => {
   const segments: Array<{ text: string; bold?: boolean; italic?: boolean; color?: string }> = [];
   
-  // Handle simple Quill bold format: <strong>text</strong>
-  if (html.includes('<strong>')) {
-    const parts = html.split(/(<strong>.*?<\/strong>)/g);
-    parts.forEach(part => {
-      if (part.startsWith('<strong>') && part.endsWith('</strong>')) {
-        const text = part.replace(/<\/?strong>/g, '');
-        if (text.trim()) {
-          segments.push({ text: text.trim(), bold: true });
-        }
-      } else if (part.trim()) {
-        // Remove other HTML tags for non-bold text
-        const cleanText = part.replace(/<[^>]*>/g, '').trim();
-        if (cleanText) {
-          segments.push({ text: cleanText });
-        }
-      }
-    });
-    return segments;
-  }
-  
   // Create a temporary div to parse HTML
   const tempDiv = document.createElement('div');
   tempDiv.innerHTML = html;
@@ -239,21 +224,25 @@ const parseHtmlContent = (html: string): Array<{ text: string; bold?: boolean; i
       let isBold = parentBold;
       let isItalic = parentItalic;
       
-      // Check for bold styling - comprehensive detection
+      // Check for bold styling - more comprehensive detection including Quill formats
       if (tagName === 'B' || tagName === 'STRONG' || 
           style.includes('font-weight: bold') || 
           style.includes('font-weight:bold') || 
           style.includes('font-weight: 700') || 
           style.includes('font-weight:700') ||
           style.includes('font-weight: bolder') ||
-          style.includes('font-weight:bolder')) {
+          style.includes('font-weight:bolder') ||
+          className.includes('ql-font-weight-bold') ||
+          element.hasAttribute('data-bold')) {
         isBold = true;
       }
       
       // Check for italic styling
       if (tagName === 'I' || tagName === 'EM' || 
           style.includes('font-style: italic') || 
-          style.includes('font-style:italic')) {
+          style.includes('font-style:italic') ||
+          className.includes('ql-font-style-italic') ||
+          element.hasAttribute('data-italic')) {
         isItalic = true;
       }
       
@@ -288,7 +277,30 @@ const parseHtmlContent = (html: string): Array<{ text: string; bold?: boolean; i
   };
   
   processNode(tempDiv);
-  return segments.filter(seg => seg.text.trim() !== '');
+  
+  // Filter out empty segments and merge consecutive segments with same formatting
+  const filteredSegments = segments.filter(seg => seg.text.trim() !== '' || seg.text === '\n');
+  
+  // Merge consecutive segments with identical formatting
+  const mergedSegments: Array<{ text: string; bold?: boolean; italic?: boolean; color?: string }> = [];
+  
+  for (const segment of filteredSegments) {
+    const lastSegment = mergedSegments[mergedSegments.length - 1];
+    
+    if (lastSegment && 
+        lastSegment.bold === segment.bold && 
+        lastSegment.italic === segment.italic && 
+        lastSegment.color === segment.color &&
+        segment.text !== '\n' && lastSegment.text !== '\n') {
+      // Merge with previous segment
+      lastSegment.text += segment.text;
+    } else {
+      // Add as new segment
+      mergedSegments.push({ ...segment });
+    }
+  }
+  
+  return mergedSegments;
 };
 
 // Helper function to strip HTML and preserve basic formatting  
@@ -441,7 +453,7 @@ const CheatSheetPDF = ({ data, columns }: { data: CheatSheetData; columns: PdfCo
                           <View>
                             {parseHtmlContent(item.content).map((segment, segIndex) => {
                               if (segment.text === '\n') {
-                                return <Text key={segIndex}>{'\n'}</Text>;
+                                return <Text key={segIndex} style={styles.textContent}>{'\n'}</Text>;
                               }
                               
                               let textStyle = styles.textContent;
