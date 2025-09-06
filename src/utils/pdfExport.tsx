@@ -194,27 +194,40 @@ const getPdfPalette = (category: string): { headerBg: string; badgeBg: string; a
 const parseHtmlContent = (html: string): Array<{ text: string; bold?: boolean; italic?: boolean; color?: string }> => {
   const segments: Array<{ text: string; bold?: boolean; italic?: boolean; color?: string }> = [];
   
-  // Log the input HTML to debug
-  console.log('Parsing HTML content:', html);
+  // Handle simple Quill bold format: <strong>text</strong>
+  if (html.includes('<strong>')) {
+    const parts = html.split(/(<strong>.*?<\/strong>)/g);
+    parts.forEach(part => {
+      if (part.startsWith('<strong>') && part.endsWith('</strong>')) {
+        const text = part.replace(/<\/?strong>/g, '');
+        if (text.trim()) {
+          segments.push({ text: text.trim(), bold: true });
+        }
+      } else if (part.trim()) {
+        // Remove other HTML tags for non-bold text
+        const cleanText = part.replace(/<[^>]*>/g, '').trim();
+        if (cleanText) {
+          segments.push({ text: cleanText });
+        }
+      }
+    });
+    return segments;
+  }
   
   // Create a temporary div to parse HTML
   const tempDiv = document.createElement('div');
   tempDiv.innerHTML = html;
   
-  console.log('Parsed DOM structure:', tempDiv.innerHTML);
-  
   const processNode = (node: Node, parentBold = false, parentItalic = false, parentColor?: string): void => {
     if (node.nodeType === Node.TEXT_NODE) {
       const text = node.textContent || '';
       if (text.trim()) {
-        const segment = { 
+        segments.push({ 
           text, 
           bold: parentBold, 
           italic: parentItalic,
           color: parentColor 
-        };
-        console.log('Adding text segment:', segment);
-        segments.push(segment);
+        });
       }
     } else if (node.nodeType === Node.ELEMENT_NODE) {
       const element = node as HTMLElement;
@@ -222,44 +235,26 @@ const parseHtmlContent = (html: string): Array<{ text: string; bold?: boolean; i
       const className = element.getAttribute('class') || '';
       const tagName = element.tagName.toUpperCase();
       
-      console.log(`Processing element: ${tagName}, class: ${className}, style: ${style}`);
-      
       let color: string | undefined = parentColor;
       let isBold = parentBold;
       let isItalic = parentItalic;
       
       // Check for bold styling - comprehensive detection
-      const boldConditions = [
-        tagName === 'B',
-        tagName === 'STRONG', 
-        tagName === 'SPAN' && style.includes('font-weight: bold'),
-        tagName === 'SPAN' && style.includes('font-weight:bold'),
-        tagName === 'SPAN' && style.includes('font-weight: 700'),
-        tagName === 'SPAN' && style.includes('font-weight:700'),
-        tagName === 'SPAN' && style.includes('font-weight: bolder'),
-        tagName === 'SPAN' && style.includes('font-weight:bolder'),
-        className.includes('ql-font-weight-bold'),
-        className.includes('bold')
-      ];
-      
-      if (boldConditions.some(condition => condition)) {
+      if (tagName === 'B' || tagName === 'STRONG' || 
+          style.includes('font-weight: bold') || 
+          style.includes('font-weight:bold') || 
+          style.includes('font-weight: 700') || 
+          style.includes('font-weight:700') ||
+          style.includes('font-weight: bolder') ||
+          style.includes('font-weight:bolder')) {
         isBold = true;
-        console.log('Bold detected!');
       }
       
       // Check for italic styling
-      const italicConditions = [
-        tagName === 'I',
-        tagName === 'EM',
-        tagName === 'SPAN' && style.includes('font-style: italic'),
-        tagName === 'SPAN' && style.includes('font-style:italic'),
-        className.includes('ql-font-style-italic'),
-        className.includes('italic')
-      ];
-      
-      if (italicConditions.some(condition => condition)) {
+      if (tagName === 'I' || tagName === 'EM' || 
+          style.includes('font-style: italic') || 
+          style.includes('font-style:italic')) {
         isItalic = true;
-        console.log('Italic detected!');
       }
       
       // Extract color from inline style
@@ -267,7 +262,6 @@ const parseHtmlContent = (html: string): Array<{ text: string; bold?: boolean; i
         const colorMatch = style.match(/color:\s*([^;]+)/i);
         if (colorMatch) {
           color = colorMatch[1].trim();
-          console.log('Color detected:', color);
         }
       }
       
@@ -294,7 +288,6 @@ const parseHtmlContent = (html: string): Array<{ text: string; bold?: boolean; i
   };
   
   processNode(tempDiv);
-  console.log('Final segments:', segments);
   return segments.filter(seg => seg.text.trim() !== '');
 };
 
