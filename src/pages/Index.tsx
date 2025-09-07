@@ -30,7 +30,7 @@ const Index = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'viewer'>('grid');
-  const [pdfColumns, setPdfColumns] = useState<1 | 2 | 3>(3);
+  const [pdfColumns, setPdfColumns] = useState<2 | 3>(3);
 
   const filteredSheets = cheatSheets.filter(sheet => {
     const matchesSearch = sheet.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -168,7 +168,6 @@ const Index = () => {
                   <SelectValue placeholder="PDF Columns" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">1 Column</SelectItem>
                   <SelectItem value="2">2 Columns</SelectItem>
                   <SelectItem value="3">3 Columns</SelectItem>
                 </SelectContent>
@@ -268,12 +267,11 @@ const Index = () => {
               )}
             </SelectContent>
           </Select>
-          <Select value={String(pdfColumns)} onValueChange={(v) => setPdfColumns(v === '1' ? 1 : v === '2' ? 2 : 3)}>
+          <Select value={String(pdfColumns)} onValueChange={(v) => setPdfColumns(v === '2' ? 2 : 3)}>
             <SelectTrigger className="w-full sm:w-40">
               <SelectValue placeholder="PDF Columns" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="1">1 Column</SelectItem>
               <SelectItem value="2">2 Columns</SelectItem>
               <SelectItem value="3">3 Columns</SelectItem>
             </SelectContent>
