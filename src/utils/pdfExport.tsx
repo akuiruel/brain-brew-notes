@@ -29,7 +29,7 @@ interface CheatSheetData {
   };
 }
 
-export type PdfColumnCount = 2 | 3;
+export type PdfColumnCount = 1 | 2 | 3;
 
 const styles = StyleSheet.create({
   page: {
@@ -73,18 +73,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 10,
   },
+  singleColumn: {
+    flexDirection: 'column',
+    gap: 12,
+  },
   column: {
     flex: 1,
     paddingHorizontal: 5,
   },
   section: {
-    marginBottom: 12,
+    marginBottom: 15,
     padding: 0,
     backgroundColor: 'transparent',
     borderRadius: 6,
     breakInside: 'avoid',
-    orphans: 2,
-    widows: 2,
+    orphans: 3,
+    widows: 3,
+    minHeight: 50,
   },
   sectionTitle: {
     fontSize: 13,
@@ -120,7 +125,7 @@ const styles = StyleSheet.create({
     lineHeight: 1.5,
     color: '#1f2937',
     fontFamily: 'Helvetica',
-    fontWeight: 700,
+    fontWeight: 'bold',
     marginBottom: 2,
   },
   italicText: {
@@ -136,7 +141,7 @@ const styles = StyleSheet.create({
     lineHeight: 1.5,
     color: '#1f2937',
     fontFamily: 'Helvetica',
-    fontWeight: 700,
+    fontWeight: 'bold',
     fontStyle: 'italic',
     marginBottom: 2,
   },
@@ -146,11 +151,24 @@ const styles = StyleSheet.create({
     backgroundColor: '#f1f5f9',
     color: '#475569',
     lineHeight: 1.4,
-    padding: 6,
+    padding: 8,
     borderRadius: 3,
     borderWidth: 1,
     borderColor: '#cbd5e1',
     marginBottom: 3,
+  },
+  codeContentBold: {
+    fontSize: 10,
+    fontFamily: 'Courier',
+    backgroundColor: '#f1f5f9',
+    color: '#475569',
+    lineHeight: 1.4,
+    padding: 8,
+    borderRadius: 3,
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    marginBottom: 3,
+    fontWeight: 'bold',
   },
   mathContent: {
     fontSize: 11,
@@ -164,11 +182,11 @@ const styles = StyleSheet.create({
     marginBottom: 3,
   },
   pageBreak: {
-    marginTop: 15,
-    marginBottom: 15,
+    marginTop: 20,
+    marginBottom: 20,
     borderTopWidth: 1,
     borderTopColor: '#e5e7eb',
-    paddingTop: 15,
+    paddingTop: 20,
   },
   continuationHeader: {
     fontSize: 16,
@@ -195,8 +213,8 @@ const getPdfPalette = (category: string): { headerBg: string; badgeBg: string; a
   }
 };
 
-// Helper function to parse HTML and extract formatted content
-const parseHtmlContent = (html: string): Array<{ text: string; bold?: boolean; italic?: boolean; color?: string }> => {
+// Enhanced HTML parsing with better bold detection for code content
+const parseHtmlContent = (html: string, isCodeContent: boolean = false): Array<{ text: string; bold?: boolean; italic?: boolean; color?: string }> => {
   const segments: Array<{ text: string; bold?: boolean; italic?: boolean; color?: string }> = [];
   
   // Create a temporary div to parse HTML
@@ -224,7 +242,7 @@ const parseHtmlContent = (html: string): Array<{ text: string; bold?: boolean; i
       let isBold = parentBold;
       let isItalic = parentItalic;
       
-      // Check for bold styling - more comprehensive detection including Quill formats
+      // Enhanced bold detection - especially important for code content
       if (tagName === 'B' || tagName === 'STRONG' || 
           style.includes('font-weight: bold') || 
           style.includes('font-weight:bold') || 
@@ -233,6 +251,7 @@ const parseHtmlContent = (html: string): Array<{ text: string; bold?: boolean; i
           style.includes('font-weight: bolder') ||
           style.includes('font-weight:bolder') ||
           className.includes('ql-font-weight-bold') ||
+          className.includes('bold') ||
           element.hasAttribute('data-bold')) {
         isBold = true;
       }
@@ -242,6 +261,7 @@ const parseHtmlContent = (html: string): Array<{ text: string; bold?: boolean; i
           style.includes('font-style: italic') || 
           style.includes('font-style:italic') ||
           className.includes('ql-font-style-italic') ||
+          className.includes('italic') ||
           element.hasAttribute('data-italic')) {
         isItalic = true;
       }
@@ -311,9 +331,9 @@ const stripHtml = (html: string): string => {
     .replace(/<p[^>]*>/gi, '')
     .replace(/<[^>]*>/g, '')
     .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
+    .replace(/&/g, '&')
+    .replace(/</g, '<')
+    .replace(/>/g, '>')
     .trim();
 };
 
@@ -334,66 +354,28 @@ const renderMathToText = (latex: string): string => {
     .replace(/\\/g, '');
 };
 
-// Split HTML content into chunks while preserving formatting
-const splitHtmlIntoChunks = (html: string, maxLength: number = 1000): string[] => {
-  if (html.length <= maxLength) {
-    return [html];
-  }
-  
-  const chunks: string[] = [];
-  const tempDiv = document.createElement('div');
-  tempDiv.innerHTML = html;
-  
-  const textContent = tempDiv.textContent || tempDiv.innerText || '';
-  if (textContent.length <= maxLength) {
-    return [html];
-  }
-  
-  // Split by sentences first
-  const sentences = textContent.split(/(?<=[.!?])\s+/);
-  let currentLength = 0;
-  let currentHtml = '';
-  
-  for (const sentence of sentences) {
-    if (currentLength + sentence.length <= maxLength) {
-      // Find this sentence in the HTML and extract with formatting
-      const sentenceStart = textContent.indexOf(sentence, currentLength);
-      if (sentenceStart !== -1) {
-        currentLength += sentence.length;
-        // This is a simplified approach - for more complex cases, 
-        // we'd need a more sophisticated HTML parsing
-        if (!currentHtml) {
-          currentHtml = html;
-        }
-      }
-    } else {
-      if (currentHtml) {
-        chunks.push(currentHtml);
-        currentHtml = '';
-        currentLength = sentence.length;
-      } else {
-        // Handle very long sentences
-        chunks.push(html);
-        break;
-      }
-    }
-  }
-  
-  if (currentHtml && chunks.length === 0) {
-    chunks.push(html);
-  }
-  
-  return chunks.length > 0 ? chunks : [html];
-};
-
-// Distribute items across columns more evenly
+// Improved item distribution for better page breaks
 const distributeItemsToColumns = (items: ContentItem[], columns: PdfColumnCount): ContentItem[][] => {
+  if (columns === 1) {
+    return [items];
+  }
+
   const columnArrays: ContentItem[][] = Array.from({ length: columns }, () => []);
   
-  // Simple round-robin distribution
+  // Estimate content size for better distribution
+  const itemSizes = items.map(item => {
+    const contentLength = stripHtml(item.content).length;
+    const titleLength = item.title ? item.title.length : 0;
+    return contentLength + titleLength + 50; // Base size for styling
+  });
+  
+  // Distribute items more evenly by size
+  const columnSizes = Array(columns).fill(0);
+  
   items.forEach((item, index) => {
-    const columnIndex = index % columns;
-    columnArrays[columnIndex].push(item);
+    const smallestColumnIndex = columnSizes.indexOf(Math.min(...columnSizes));
+    columnArrays[smallestColumnIndex].push(item);
+    columnSizes[smallestColumnIndex] += itemSizes[index];
   });
   
   return columnArrays;
@@ -402,8 +384,8 @@ const distributeItemsToColumns = (items: ContentItem[], columns: PdfColumnCount)
 const CheatSheetPDF = ({ data, columns }: { data: CheatSheetData; columns: PdfColumnCount }) => {
   const palette = getPdfPalette(data.customCategory ? 'custom' : data.category);
   
-  // Estimate content size and split into pages more intelligently
-  const maxItemsPerPage = columns === 2 ? 8 : 12;
+  // Adjust items per page based on column count
+  const maxItemsPerPage = columns === 1 ? 15 : columns === 2 ? 10 : 8;
   const pages: ContentItem[][] = [];
   
   for (let i = 0; i < data.content.items.length; i += maxItemsPerPage) {
@@ -437,9 +419,9 @@ const CheatSheetPDF = ({ data, columns }: { data: CheatSheetData; columns: PdfCo
               </View>
             )}
 
-            <View style={styles.columnsContainer}>
+            <View style={columns === 1 ? styles.singleColumn : styles.columnsContainer}>
               {columnItems.map((columnContent, colIndex) => (
-                <View key={colIndex} style={styles.column}>
+                <View key={colIndex} style={columns === 1 ? {} : styles.column}>
                   {columnContent.map((item) => (
                     <View key={item.id} style={styles.section} wrap={false}>
                       {item.title && (
@@ -487,9 +469,27 @@ const CheatSheetPDF = ({ data, columns }: { data: CheatSheetData; columns: PdfCo
                        )}
                        
                        {item.type === 'code' && (
-                         <Text style={styles.codeContent}>
-                           {stripHtml(item.content)}
-                         </Text>
+                         <View>
+                           {parseHtmlContent(item.content, true).map((segment, segIndex) => {
+                             if (segment.text === '\n') {
+                               return <Text key={segIndex} style={styles.codeContent}>{'\n'}</Text>;
+                             }
+                             
+                             const codeStyle = segment.bold ? styles.codeContentBold : styles.codeContent;
+                             
+                             return (
+                               <Text 
+                                 key={segIndex} 
+                                 style={[
+                                   codeStyle,
+                                   segment.color && { color: segment.color },
+                                 ]}
+                               >
+                                 {segment.text}
+                               </Text>
+                             );
+                           })}
+                         </View>
                        )}
                      </View>
                    </View>
