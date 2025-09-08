@@ -92,7 +92,6 @@ const styles = StyleSheet.create({
     padding: 0,
     backgroundColor: 'transparent',
     borderRadius: 6,
-    breakInside: 'avoid',
     orphans: 2,
     widows: 2,
   },
@@ -344,14 +343,6 @@ const renderMathToText = (latex: string): string => {
     .replace(/\\/g, '');
 };
 
-// Helper function to wrap long words to prevent overflow in PDF
-const wordWrap = (str: string, maxWidth: number = 40): string => {
-  const zeroWidthSpace = '\u200B';
-  // This regex finds long sequences of non-space characters and inserts a zero-width space.
-  const regex = new RegExp(`([^\\s]{${maxWidth}})(?=[^\\s])`, 'g');
-  return str.replace(regex, `$1${zeroWidthSpace}`);
-};
-
 // Split HTML content into chunks while preserving formatting
 const splitHtmlIntoChunks = (html: string, maxLength: number = 1000): string[] => {
   if (html.length <= maxLength) {
@@ -514,7 +505,7 @@ const CheatSheetPDF = ({ data, columns }: { data: CheatSheetData; columns: PdfCo
 
                               return (
                                 <Text key={segIndex} style={style}>
-                                  {wordWrap(segment.text)}
+                                  {segment.text}
                                 </Text>
                               );
                             })}
