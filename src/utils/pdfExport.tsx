@@ -345,7 +345,7 @@ const renderMathToText = (latex: string): string => {
 };
 
 // Helper function to wrap long words to prevent overflow in PDF
-const wordWrap = (str: string, maxWidth: number = 25): string => {
+const wordWrap = (str: string, maxWidth: number = 40): string => {
   const zeroWidthSpace = '\u200B';
   // This regex finds long sequences of non-space characters and inserts a zero-width space.
   const regex = new RegExp(`([^\\s]{${maxWidth}})(?=[^\\s])`, 'g');
@@ -491,7 +491,7 @@ const CheatSheetPDF = ({ data, columns }: { data: CheatSheetData; columns: PdfCo
                                     segment.color && { color: segment.color },
                                   ]}
                                 >
-                                  {wordWrap(segment.text)}
+                                  {segment.text}
                                 </Text>
                               );
                             })}
