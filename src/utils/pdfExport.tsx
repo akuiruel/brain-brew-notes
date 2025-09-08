@@ -39,7 +39,7 @@ interface CheatSheetData {
   };
 }
 
-export type PdfColumnCount = 1 | 2 | 3;
+export type PdfColumnCount = 2 | 3;
 
 const styles = StyleSheet.create({
   page: {
@@ -92,6 +92,7 @@ const styles = StyleSheet.create({
     padding: 0,
     backgroundColor: 'transparent',
     borderRadius: 6,
+    breakInside: 'avoid',
     orphans: 2,
     widows: 2,
   },
