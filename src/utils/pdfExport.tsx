@@ -152,6 +152,46 @@ const styles = StyleSheet.create({
     borderColor: '#cbd5e1',
     marginBottom: 3,
   },
+  codeBoldContent: {
+    fontSize: 10,
+    fontFamily: 'Courier',
+    backgroundColor: '#f1f5f9',
+    color: '#475569',
+    lineHeight: 1.4,
+    padding: 6,
+    borderRadius: 3,
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    marginBottom: 3,
+    fontWeight: 'bold',
+  },
+  codeItalicContent: {
+    fontSize: 10,
+    fontFamily: 'Courier',
+    backgroundColor: '#f1f5f9',
+    color: '#475569',
+    lineHeight: 1.4,
+    padding: 6,
+    borderRadius: 3,
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    marginBottom: 3,
+    fontStyle: 'italic',
+  },
+  codeBoldItalicContent: {
+    fontSize: 10,
+    fontFamily: 'Courier',
+    backgroundColor: '#f1f5f9',
+    color: '#475569',
+    lineHeight: 1.4,
+    padding: 6,
+    borderRadius: 3,
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    marginBottom: 3,
+    fontWeight: 'bold',
+    fontStyle: 'italic',
+  },
   mathContent: {
     fontSize: 11,
     lineHeight: 1.4,
@@ -232,7 +272,15 @@ const parseHtmlContent = (html: string): Array<{ text: string; bold?: boolean; i
           style.includes('font-weight:700') ||
           style.includes('font-weight: bolder') ||
           style.includes('font-weight:bolder') ||
+          style.includes('font-weight:700') ||
+          style.includes('font-weight: 700') ||
+          style.includes('font-weight:bold') ||
+          style.includes('font-weight: bold') ||
           className.includes('ql-font-weight-bold') ||
+          className.includes('ql-bold') ||
+          element.style.fontWeight === 'bold' ||
+          element.style.fontWeight === '700' ||
+          element.style.fontWeight === 'bolder' ||
           element.hasAttribute('data-bold')) {
         isBold = true;
       }
@@ -242,6 +290,8 @@ const parseHtmlContent = (html: string): Array<{ text: string; bold?: boolean; i
           style.includes('font-style: italic') || 
           style.includes('font-style:italic') ||
           className.includes('ql-font-style-italic') ||
+          className.includes('ql-italic') ||
+          element.style.fontStyle === 'italic' ||
           element.hasAttribute('data-italic')) {
         isItalic = true;
       }
@@ -487,9 +537,34 @@ const CheatSheetPDF = ({ data, columns }: { data: CheatSheetData; columns: PdfCo
                        )}
                        
                        {item.type === 'code' && (
-                         <Text style={styles.codeContent}>
-                           {stripHtml(item.content)}
-                         </Text>
+                         <View>
+                           {parseHtmlContent(item.content).map((segment, segIndex) => {
+                             if (segment.text === '\n') {
+                               return <Text key={segIndex} style={styles.codeContent}>{'\n'}</Text>;
+                             }
+                             
+                             let codeStyle = styles.codeContent;
+                             if (segment.bold && segment.italic) {
+                               codeStyle = styles.codeBoldItalicContent;
+                             } else if (segment.bold) {
+                               codeStyle = styles.codeBoldContent;
+                             } else if (segment.italic) {
+                               codeStyle = styles.codeItalicContent;
+                             }
+                             
+                             return (
+                               <Text 
+                                 key={segIndex} 
+                                 style={[
+                                   codeStyle,
+                                   segment.color && { color: segment.color },
+                                 ]}
+                               >
+                                 {segment.text}
+                               </Text>
+                             );
+                           })}
+                         </View>
                        )}
                      </View>
                    </View>
