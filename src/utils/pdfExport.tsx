@@ -11,6 +11,16 @@ Font.register({
   ]
 });
 
+Font.register({
+  family: 'Courier',
+  fonts: [
+    { fontWeight: 'normal' },
+    { fontWeight: 'bold' },
+    { fontStyle: 'italic' },
+    { fontWeight: 'bold', fontStyle: 'italic' },
+  ]
+});
+
 interface ContentItem {
   id: string;
   type: 'text' | 'math' | 'code';
@@ -480,17 +490,28 @@ const CheatSheetPDF = ({ data, columns }: { data: CheatSheetData; columns: PdfCo
                           </View>
                         )}
                        
-                       {item.type === 'math' && (
-                         <Text style={styles.mathContent}>
-                           {renderMathToText(stripHtml(item.content))}
-                         </Text>
-                       )}
-                       
-                       {item.type === 'code' && (
-                         <Text style={styles.codeContent}>
-                           {stripHtml(item.content)}
-                         </Text>
-                       )}
+                        {item.type === 'math' && (
+                          <Text style={styles.mathContent}>
+                            {renderMathToText(stripHtml(item.content))}
+                          </Text>
+                        )}
+
+                        {item.type === 'code' && (
+                          <Text style={styles.codeContent}>
+                            {parseHtmlContent(item.content).map((segment, segIndex) => {
+                              const style: any = {};
+                              if (segment.bold) style.fontWeight = 'bold';
+                              if (segment.italic) style.fontStyle = 'italic';
+                              if (segment.color) style.color = segment.color;
+
+                              return (
+                                <Text key={segIndex} style={style}>
+                                  {segment.text}
+                                </Text>
+                              );
+                            })}
+                          </Text>
+                        )}
                      </View>
                    </View>
                   ))}
