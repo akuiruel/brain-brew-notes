@@ -135,7 +135,7 @@ const EditCheatSheet = () => {
 	const navigate = useNavigate();
 	const { id } = useParams();
 	const { toast } = useToast();
-	const { getCheatSheetById, updateCheatSheet, isOnline, customCategories } = useCheatSheets();
+	const { getCheatSheetById, updateCheatSheet, isOnline, customCategories, isLoading: areSheetsLoading } = useCheatSheets();
 	
 	const [title, setTitle] = useState('');
 	const [description, setDescription] = useState('');
@@ -154,10 +154,10 @@ const EditCheatSheet = () => {
 	};
 
 	useEffect(() => {
-		if (id) {
+		if (id && !areSheetsLoading) {
 			fetchCheatSheet();
 		}
-	}, [id]);
+	}, [id, areSheetsLoading]);
 
 	const sensors = useSensors(
 		useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -192,8 +192,22 @@ const EditCheatSheet = () => {
 
 			setTitle(data.title);
 			setDescription(data.description || '');
-			setCategory(data.category);
 			setContentItems(data.content?.items || []);
+
+			if (data.category === 'other' && data.customCategory) {
+				const customCat = customCategories.find(cat => cat.name === data.customCategory);
+				if (customCat && customCat.id) {
+					setCategory('custom');
+					setCustomCategoryId(customCat.id);
+				} else {
+					setCategory('other');
+					setCustomCategoryId('');
+				}
+			} else {
+				setCategory(data.category);
+				setCustomCategoryId('');
+			}
+
 		} catch (error) {
 			console.error('Error fetching cheat sheet:', error);
 			toast({
