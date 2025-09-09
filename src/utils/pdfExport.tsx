@@ -1,4 +1,4 @@
-import { Document, Page, Text, View, StyleSheet, pdf, Font } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, pdf, Font, Style } from '@react-pdf/renderer';
 
 // Register fonts for better formatting support
 Font.register({
@@ -150,17 +150,21 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     marginBottom: 2,
   },
-  codeContent: {
-    fontSize: 10,
-    fontFamily: 'Courier',
+  codeContainer: {
     backgroundColor: '#f1f5f9',
-    color: '#475569',
-    lineHeight: 1.4,
     padding: 6,
     borderRadius: 3,
     borderWidth: 1,
     borderColor: '#cbd5e1',
     marginBottom: 3,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  codeText: {
+    fontSize: 10,
+    fontFamily: 'Courier',
+    color: '#475569',
+    lineHeight: 1.4,
   },
   mathContent: {
     fontSize: 11,
@@ -332,7 +336,7 @@ const renderMathToText = (latex: string): string => {
   return latex
     .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '($1)/($2)')
     .replace(/\^\{([^}]+)\}/g, '^($1)')
-    .replace(/\_\{([^}]+)\}/g, '_($1)')
+    .replace(/_\{([^}]+)\}/g, '_($1)')
     .replace(/\\sqrt\{([^}]+)\}/g, 'sqrt($1)')
     .replace(/\\sum/g, 'Σ')
     .replace(/\\int/g, '∫')
@@ -342,6 +346,12 @@ const renderMathToText = (latex: string): string => {
     .replace(/\\infty/g, '∞')
     .replace(/\\pm/g, '±')
     .replace(/\\/g, '');
+};
+
+const allowLineBreaks = (text: string, maxLength = 15): string => {
+  const zeroWidthSpace = '\u200B';
+  const regex = new RegExp(`([^\\s]{${maxLength}})`, 'g');
+  return text.replace(regex, `$1${zeroWidthSpace}`);
 };
 
 // Split HTML content into chunks while preserving formatting
@@ -460,7 +470,7 @@ const CheatSheetPDF = ({ data, columns }: { data: CheatSheetData; columns: PdfCo
                       
                       <View style={styles.contentBox}>
                         {item.type === 'text' && (
-                          <View>
+                          <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
                             {parseHtmlContent(item.content).map((segment, segIndex) => {
                               if (segment.text === '\n') {
                                 return <Text key={segIndex} style={styles.textContent}>{'\n'}</Text>;
@@ -492,25 +502,25 @@ const CheatSheetPDF = ({ data, columns }: { data: CheatSheetData; columns: PdfCo
                        
                         {item.type === 'math' && (
                           <Text style={styles.mathContent}>
-                            {renderMathToText(stripHtml(item.content))}
+                            {allowLineBreaks(renderMathToText(stripHtml(item.content)))}
                           </Text>
                         )}
 
                         {item.type === 'code' && (
-                          <Text style={styles.codeContent}>
+                          <View style={styles.codeContainer}>
                             {parseHtmlContent(item.content).map((segment, segIndex) => {
-                              const style: any = {};
+                              const style: Style = {};
                               if (segment.bold) style.fontWeight = 'bold';
                               if (segment.italic) style.fontStyle = 'italic';
                               if (segment.color) style.color = segment.color;
 
                               return (
-                                <Text key={segIndex} style={style}>
+                                <Text key={segIndex} style={[styles.codeText, style]}>
                                   {segment.text}
                                 </Text>
                               );
                             })}
-                          </Text>
+                          </View>
                         )}
                      </View>
                    </View>
