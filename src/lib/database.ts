@@ -10,7 +10,8 @@ import {
   where,
   orderBy,
   serverTimestamp,
-  Timestamp
+  Timestamp,
+  deleteField
 } from 'firebase/firestore';
 import { 
   signInAnonymously, 
@@ -182,10 +183,16 @@ export const updateCheatSheet = async (id: string, updates: Partial<Omit<CheatSh
   const docRef = doc(db, 'cheatSheets', id);
   
   // Remove strict ownership verification to allow cross-browser edits on same collection
-  const updateData = {
+  const updateData: any = {
     ...updates,
     updatedAt: serverTimestamp(),
   };
+
+  // If customCategory was explicitly passed in updates and is undefined,
+  // this means we want to remove this field.
+  if (updates.hasOwnProperty('customCategory') && updates.customCategory === undefined) {
+    updateData.customCategory = deleteField();
+  }
 
   await updateDoc(docRef, updateData);
   
