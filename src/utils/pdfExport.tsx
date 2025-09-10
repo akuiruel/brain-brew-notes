@@ -92,8 +92,6 @@ const styles = StyleSheet.create({
     padding: 0,
     backgroundColor: 'transparent',
     borderRadius: 6,
-    orphans: 3,
-    widows: 3,
   },
   sectionTitle: {
     fontSize: 13,
@@ -123,6 +121,8 @@ const styles = StyleSheet.create({
     marginBottom: 2,
     fontFamily: 'Helvetica',
     fontWeight: 'normal',
+    orphans: 3,
+    widows: 3,
   },
   boldText: {
     fontSize: 11,
@@ -131,6 +131,8 @@ const styles = StyleSheet.create({
     fontFamily: 'Helvetica',
     fontWeight: 700,
     marginBottom: 2,
+    orphans: 3,
+    widows: 3,
   },
   italicText: {
     fontSize: 11,
@@ -139,6 +141,8 @@ const styles = StyleSheet.create({
     fontFamily: 'Helvetica',
     fontStyle: 'italic',
     marginBottom: 2,
+    orphans: 3,
+    widows: 3,
   },
   boldItalicText: {
     fontSize: 11,
@@ -148,6 +152,8 @@ const styles = StyleSheet.create({
     fontWeight: 700,
     fontStyle: 'italic',
     marginBottom: 2,
+    orphans: 3,
+    widows: 3,
   },
   codeContainer: {
     backgroundColor: '#f1f5f9',
@@ -164,6 +170,8 @@ const styles = StyleSheet.create({
     fontFamily: 'Courier',
     color: '#475569',
     lineHeight: 1.4,
+    orphans: 3,
+    widows: 3,
   },
   mathContent: {
     fontSize: 11,
