@@ -464,7 +464,7 @@ const CheatSheetPDF = ({ data, columns }: { data: CheatSheetData; columns: PdfCo
                     <View key={item.id} style={styles.section} wrap={false}>
                       {item.title && (
                         <Text style={[styles.sectionTitle, { borderLeftColor: palette.accent }]}>
-                          {item.title}
+                          {allowLineBreaks(item.title, 30)}
                         </Text>
                       )}
                       
@@ -493,7 +493,7 @@ const CheatSheetPDF = ({ data, columns }: { data: CheatSheetData; columns: PdfCo
                                     segment.color && { color: segment.color },
                                   ]}
                                 >
-                                  {segment.text}
+                                  {allowLineBreaks(segment.text)}
                                 </Text>
                               );
                             })}
@@ -516,7 +516,7 @@ const CheatSheetPDF = ({ data, columns }: { data: CheatSheetData; columns: PdfCo
 
                               return (
                                 <Text key={segIndex} style={[styles.codeText, style]}>
-                                  {segment.text}
+                                  {allowLineBreaks(segment.text, 40)}
                                 </Text>
                               );
                             })}
