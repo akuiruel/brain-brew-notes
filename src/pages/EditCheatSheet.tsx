@@ -237,7 +237,7 @@ const EditCheatSheet = () => {
 			title: '',
 			color: '#000000',
 		};
-		setContentItems(prev => [...prev, newItem]);
+		setContentItems(prev => [newItem, ...prev]);
 	};
 
 	const updateContentItem = (id: string, updates: Partial<ContentItem>) => {
