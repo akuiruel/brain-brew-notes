@@ -92,9 +92,8 @@ const styles = StyleSheet.create({
     padding: 0,
     backgroundColor: 'transparent',
     borderRadius: 6,
-    breakInside: 'avoid',
-    orphans: 2,
-    widows: 2,
+    orphans: 3,
+    widows: 3,
   },
   sectionTitle: {
     fontSize: 13,
@@ -348,12 +347,6 @@ const renderMathToText = (latex: string): string => {
     .replace(/\\/g, '');
 };
 
-const allowLineBreaks = (text: string, maxLength = 15): string => {
-  const zeroWidthSpace = '\u200B';
-  const regex = new RegExp(`([^\\s]{${maxLength}})`, 'g');
-  return text.replace(regex, `$1${zeroWidthSpace}`);
-};
-
 // Split HTML content into chunks while preserving formatting
 const splitHtmlIntoChunks = (html: string, maxLength: number = 1000): string[] => {
   if (html.length <= maxLength) {
@@ -463,8 +456,8 @@ const CheatSheetPDF = ({ data, columns }: { data: CheatSheetData; columns: PdfCo
                   {columnContent.map((item) => (
                     <View key={item.id} style={styles.section}>
                       {item.title && (
-                        <Text style={[styles.sectionTitle, { borderLeftColor: palette.accent }]}>
-                          {allowLineBreaks(item.title, 30)}
+                        <Text style={[styles.sectionTitle, { borderLeftColor: palette.accent }]} minPresenceAhead={40}>
+                          {item.title}
                         </Text>
                       )}
                       
@@ -493,7 +486,7 @@ const CheatSheetPDF = ({ data, columns }: { data: CheatSheetData; columns: PdfCo
                                     segment.color && { color: segment.color },
                                   ]}
                                 >
-                                  {allowLineBreaks(segment.text)}
+                                  {segment.text}
                                 </Text>
                               );
                             })}
@@ -502,7 +495,7 @@ const CheatSheetPDF = ({ data, columns }: { data: CheatSheetData; columns: PdfCo
                        
                         {item.type === 'math' && (
                           <Text style={styles.mathContent}>
-                            {allowLineBreaks(renderMathToText(stripHtml(item.content)))}
+                            {renderMathToText(stripHtml(item.content))}
                           </Text>
                         )}
 
@@ -516,7 +509,7 @@ const CheatSheetPDF = ({ data, columns }: { data: CheatSheetData; columns: PdfCo
 
                               return (
                                 <Text key={segIndex} style={[styles.codeText, style]}>
-                                  {allowLineBreaks(segment.text, 40)}
+                                  {segment.text}
                                 </Text>
                               );
                             })}
