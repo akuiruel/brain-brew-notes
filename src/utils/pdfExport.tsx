@@ -461,7 +461,7 @@ const CheatSheetPDF = ({ data, columns }: { data: CheatSheetData; columns: PdfCo
               {columnItems.map((columnContent, colIndex) => (
                 <View key={colIndex} style={styles.column}>
                   {columnContent.map((item) => (
-                    <View key={item.id} style={styles.section} wrap={false}>
+                    <View key={item.id} style={styles.section}>
                       {item.title && (
                         <Text style={[styles.sectionTitle, { borderLeftColor: palette.accent }]}>
                           {allowLineBreaks(item.title, 30)}
