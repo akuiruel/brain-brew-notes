@@ -12,7 +12,7 @@ import MathRichTextEditor from '@/components/MathRichTextEditor';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Save, Plus, Trash2, ArrowUp, ArrowDown, GripVertical, File as FileIcon } from 'lucide-react';
+import { Save, Plus, Trash2, ArrowUp, ArrowDown, GripVertical, File as FileIcon, Loader2 } from 'lucide-react';
 import type { ContentItem, CheatSheetCategory } from '@/integrations/firebase/types';
 import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { uploadFile, deleteFile } from '@/lib/database';
@@ -153,6 +153,7 @@ const CreateCheatSheet = () => {
   const [category, setCategory] = useState<CheatSheetCategory | ''>('');
   const [contentItems, setContentItems] = useState<ContentItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploadingPdf, setIsUploadingPdf] = useState(false);
   const [customCategoryId, setCustomCategoryId] = useState<string>('');
   const displayItems = contentItems;
   const handlePositionChange = (id: string, newPositionOneBased: number) => {
@@ -194,7 +195,7 @@ const CreateCheatSheet = () => {
 
   const addPdfItem = async (file: File) => {
     if (!file) return;
-    setIsLoading(true);
+    setIsUploadingPdf(true);
     try {
       const { url, path } = await uploadFile(file, "pdfs");
       addContentItem('pdf', {
@@ -211,7 +212,7 @@ const CreateCheatSheet = () => {
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setIsUploadingPdf(false);
     }
   };
 
@@ -419,9 +420,14 @@ const CreateCheatSheet = () => {
                   variant="outline"
                   onClick={() => document.getElementById('pdf-upload')?.click()}
                   className="w-full justify-start gap-2"
+                  disabled={isUploadingPdf}
                 >
-                  <Plus className="h-4 w-4" />
-                  Add PDF
+                  {isUploadingPdf ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Plus className="h-4 w-4" />
+                  )}
+                  {isUploadingPdf ? 'Uploading...' : 'Add PDF'}
                 </Button>
                 <input
                   type="file"
