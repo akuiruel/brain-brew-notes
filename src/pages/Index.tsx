@@ -10,8 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, Eye, Search, Download, FileText, Calculator, Code, BookOpen, Folder } from 'lucide-react';
-import { exportToPDF } from '@/utils/pdfExport';
+import { Plus, Edit, Trash2, Eye, Search, FileText, Calculator, Code, BookOpen, Folder } from 'lucide-react';
 import { format } from 'date-fns';
 
 // Define preset categories
@@ -30,7 +29,6 @@ const Index = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'viewer'>('grid');
-  const [pdfColumns, setPdfColumns] = useState<2 | 3>(3);
 
   const filteredSheets = cheatSheets.filter(sheet => {
     const matchesSearch = sheet.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -61,22 +59,6 @@ const Index = () => {
       toast({
         title: "Error",
         description: "Failed to delete cheat sheet",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleExportPDF = async (sheet: any) => {
-    try {
-      await exportToPDF(sheet, { columns: pdfColumns });
-      toast({
-        title: "Success",
-        description: "PDF exported successfully",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to export PDF",
         variant: "destructive",
       });
     }
@@ -163,25 +145,7 @@ const Index = () => {
               ← Back to Grid
             </Button>
             <div className="flex flex-col sm:flex-row gap-2 items-center">
-              <Select value={String(pdfColumns)} onValueChange={(v) => setPdfColumns(v === '2' ? 2 : 3)}>
-                <SelectTrigger className="w-full sm:w-[140px]">
-                  <SelectValue placeholder="PDF Columns" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="2">2 Columns</SelectItem>
-                  <SelectItem value="3">3 Columns</SelectItem>
-                </SelectContent>
-              </Select>
               <div className="flex gap-2 w-full sm:w-auto">
-                <Button
-                  variant="outline"
-                  onClick={() => handleExportPDF(selectedSheet)}
-                  className="gap-2 flex-1 sm:flex-none"
-                >
-                  <Download className="h-4 w-4" />
-                  <span className="hidden sm:inline">Export PDF</span>
-                  <span className="sm:hidden">PDF</span>
-                </Button>
                 <Link to={`/edit/${selectedSheet.id}`} className="flex-1 sm:flex-none">
                   <Button variant="outline" className="gap-2 w-full">
                     <Edit className="h-4 w-4" />
@@ -265,15 +229,6 @@ const Index = () => {
                   ))}
                 </>
               )}
-            </SelectContent>
-          </Select>
-          <Select value={String(pdfColumns)} onValueChange={(v) => setPdfColumns(v === '2' ? 2 : 3)}>
-            <SelectTrigger className="w-full sm:w-40">
-              <SelectValue placeholder="PDF Columns" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="2">2 Columns</SelectItem>
-              <SelectItem value="3">3 Columns</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -361,14 +316,6 @@ const Index = () => {
                           className="h-8 w-8 p-0"
                         >
                           <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleExportPDF(sheet)}
-                          className="h-8 w-8 p-0"
-                        >
-                          <Download className="h-4 w-4" />
                         </Button>
                         <Link to={`/edit/${sheet.id}`}>
                           <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
