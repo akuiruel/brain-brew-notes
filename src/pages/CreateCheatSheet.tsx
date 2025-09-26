@@ -5,6 +5,7 @@ import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import RichTextEditor from '@/components/RichTextEditor';
@@ -154,6 +155,7 @@ const CreateCheatSheet = () => {
   const [contentItems, setContentItems] = useState<ContentItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isUploadingPdf, setIsUploadingPdf] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [customCategoryId, setCustomCategoryId] = useState<string>('');
   const displayItems = contentItems;
   const handlePositionChange = (id: string, newPositionOneBased: number) => {
@@ -196,8 +198,12 @@ const CreateCheatSheet = () => {
   const addPdfItem = async (file: File) => {
     if (!file) return;
     setIsUploadingPdf(true);
+    setUploadProgress(0);
+
     try {
-      const { url, path } = await uploadFile(file, "pdfs");
+      const { url, path } = await uploadFile(file, "pdfs", (progress) => {
+        setUploadProgress(progress);
+      });
       addContentItem('pdf', {
         title: file.name,
         fileUrl: url,
@@ -213,6 +219,7 @@ const CreateCheatSheet = () => {
       });
     } finally {
       setIsUploadingPdf(false);
+      setUploadProgress(0);
     }
   };
 
@@ -440,6 +447,12 @@ const CreateCheatSheet = () => {
                     }
                   }}
                 />
+                {isUploadingPdf && (
+                  <div className="mt-2">
+                    <Progress value={uploadProgress} className="w-full" />
+                    <p className="text-sm text-center mt-1">{Math.round(uploadProgress)}%</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
