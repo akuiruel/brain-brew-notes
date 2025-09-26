@@ -13,58 +13,13 @@ import {
   Timestamp,
   deleteField
 } from 'firebase/firestore';
-import {
-  ref,
-  uploadBytesResumable,
-  getDownloadURL,
-  deleteObject,
-} from "firebase/storage";
 import { 
   signInAnonymously, 
   onAuthStateChanged, 
   User 
 } from 'firebase/auth';
-import { db, auth, storage } from './firebase';
+import { db, auth } from './firebase';
 import type { ContentItem, CheatSheetCategory } from '@/integrations/firebase/types';
-
-export const uploadFile = (
-  file: File,
-  path: string,
-  onProgress: (progress: number) => void
-): Promise<{ url: string; path: string }> => {
-  return new Promise(async (resolve, reject) => {
-    const user = await ensureAnonymousSession();
-    const storageRef = ref(storage, `user/${user.uid}/${path}/${file.name}`);
-    const uploadTask = uploadBytesResumable(storageRef, file);
-
-    uploadTask.on(
-      "state_changed",
-      (snapshot) => {
-        const progress =
-          (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        onProgress(progress);
-      },
-      (error) => {
-        console.error("Upload failed:", error);
-        reject(error);
-      },
-      async () => {
-        try {
-          const url = await getDownloadURL(uploadTask.snapshot.ref);
-          resolve({ url, path: uploadTask.snapshot.ref.fullPath });
-        } catch (error) {
-          reject(error);
-        }
-      }
-    );
-  });
-};
-
-export const deleteFile = async (filePath: string): Promise<boolean> => {
-  const storageRef = ref(storage, filePath);
-  await deleteObject(storageRef);
-  return true;
-};
 
 export interface CheatSheetData {
   id?: string;
@@ -249,35 +204,10 @@ export const updateCheatSheet = async (id: string, updates: Partial<Omit<CheatSh
 // Delete a cheat sheet
 export const deleteCheatSheet = async (id: string): Promise<boolean> => {
   const user = await ensureAnonymousSession();
+
   const docRef = doc(db, 'cheatSheets', id);
 
-  // First, get the document to access its content
-  const docSnap = await getDoc(docRef);
-
-  if (docSnap.exists()) {
-    const cheatSheet = convertFirestoreDoc(docSnap);
-    if (cheatSheet.content && cheatSheet.content.items) {
-      const pdfItems = cheatSheet.content.items.filter(
-        (item) => item.type === 'pdf' && item.fileName
-      );
-
-      // Delete all associated PDF files from storage
-      if (pdfItems.length > 0) {
-        const deletePromises = pdfItems.map((item) => {
-          if (item.fileName) {
-            return deleteFile(item.fileName).catch(err => {
-              // Log error but don't block other deletions
-              console.error(`Failed to delete file ${item.fileName}:`, err);
-            });
-          }
-          return Promise.resolve();
-        });
-        await Promise.all(deletePromises);
-      }
-    }
-  }
-
-  // Now, delete the Firestore document
+  // Remove strict ownership verification to allow cross-browser deletes
   await deleteDoc(docRef);
   return true;
 };

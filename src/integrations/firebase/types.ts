@@ -18,12 +18,10 @@ export interface CheatSheetContent {
 
 export interface ContentItem {
   id: string;
-  type: 'text' | 'math' | 'code' | 'pdf';
+  type: 'text' | 'math' | 'code';
   content: string;
   title?: string;
   color?: string;
-  fileUrl?: string;
-  fileName?: string;
 }
 
 export type CheatSheetCategory = 'mathematics' | 'software' | 'coding' | 'study' | 'other' | 'custom';

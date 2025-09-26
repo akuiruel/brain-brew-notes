@@ -5,7 +5,6 @@ import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import RichTextEditor from '@/components/RichTextEditor';
@@ -13,15 +12,13 @@ import MathRichTextEditor from '@/components/MathRichTextEditor';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Save, Plus, Trash2, ArrowUp, ArrowDown, GripVertical, File as FileIcon, Loader2 } from 'lucide-react';
+import { Save, Plus, Trash2, ArrowUp, ArrowDown, GripVertical } from 'lucide-react';
 import type { ContentItem, CheatSheetCategory } from '@/integrations/firebase/types';
 import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors } from '@dnd-kit/core';
-import { uploadFile, deleteFile } from '@/lib/database';
 import { SortableContext, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import EnhancedCategoryManager from '@/components/EnhancedCategoryManager';
 import CategoryDropdown from '@/components/CategoryDropdown';
-import PdfViewer from '@/components/PdfViewer';
 
 const moveItem = <T,>(array: T[], fromIndex: number, toIndex: number): T[] => {
   const newArray = array.slice();
@@ -63,7 +60,6 @@ const SortableItem = ({
               {item.type === 'text' && 'Text'}
               {item.type === 'math' && 'Math Formula'}
               {item.type === 'code' && 'Code'}
-              {item.type === 'pdf' && 'PDF Document'}
             </span>
             <span className="text-xs text-muted-foreground">#{index + 1}</span>
           </div>
@@ -132,14 +128,6 @@ const SortableItem = ({
             />
           </div>
         )}
-        {item.type === 'pdf' && item.fileUrl && (
-          <div>
-            <Label>PDF Preview</Label>
-            <div className="mt-2 rounded-lg border overflow-hidden">
-              <PdfViewer fileUrl={item.fileUrl} />
-            </div>
-          </div>
-        )}
       </CardContent>
     </Card>
   );
@@ -154,8 +142,6 @@ const CreateCheatSheet = () => {
   const [category, setCategory] = useState<CheatSheetCategory | ''>('');
   const [contentItems, setContentItems] = useState<ContentItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isUploadingPdf, setIsUploadingPdf] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
   const [customCategoryId, setCustomCategoryId] = useState<string>('');
   const displayItems = contentItems;
   const handlePositionChange = (id: string, newPositionOneBased: number) => {
@@ -183,44 +169,15 @@ const CreateCheatSheet = () => {
   if (!isOnline) {
     return <Layout><div /></Layout>;
   }
-  const addContentItem = (type: 'text' | 'math' | 'code' | 'pdf', data?: Partial<ContentItem>) => {
+  const addContentItem = (type: 'text' | 'math' | 'code') => {
     const newItem: ContentItem = {
       id: crypto.randomUUID(),
       type,
       content: '',
       title: '',
       color: '#000000',
-      ...data,
     };
     setContentItems(prev => [...prev, newItem]);
-  };
-
-  const addPdfItem = async (file: File) => {
-    if (!file) return;
-    setIsUploadingPdf(true);
-    setUploadProgress(0);
-
-    try {
-      const { url, path } = await uploadFile(file, "pdfs", (progress) => {
-        setUploadProgress(progress);
-      });
-      addContentItem('pdf', {
-        title: file.name,
-        fileUrl: url,
-        fileName: path,
-        content: `PDF file: ${file.name}`,
-      });
-    } catch (error) {
-      console.error("Error uploading PDF:", error);
-      toast({
-        title: "Error",
-        description: "Failed to upload PDF. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsUploadingPdf(false);
-      setUploadProgress(0);
-    }
   };
 
   const updateContentItem = (id: string, updates: Partial<ContentItem>) => {
@@ -229,24 +186,7 @@ const CreateCheatSheet = () => {
     );
   };
 
-  const removeContentItem = async (id: string) => {
-    const itemToRemove = contentItems.find(item => item.id === id);
-    if (itemToRemove && itemToRemove.type === 'pdf' && itemToRemove.fileName) {
-      try {
-        await deleteFile(itemToRemove.fileName);
-        toast({
-          title: "Success",
-          description: "PDF file deleted successfully.",
-        });
-      } catch (error) {
-        console.error("Error deleting PDF file:", error);
-        toast({
-          title: "Error",
-          description: "Failed to delete PDF file from storage.",
-          variant: "destructive",
-        });
-      }
-    }
+  const removeContentItem = (id: string) => {
     setContentItems(prev => prev.filter(item => item.id !== id));
   };
 
@@ -423,36 +363,6 @@ const CreateCheatSheet = () => {
                   <Plus className="h-4 w-4" />
                   Add Code
                 </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => document.getElementById('pdf-upload')?.click()}
-                  className="w-full justify-start gap-2"
-                  disabled={isUploadingPdf}
-                >
-                  {isUploadingPdf ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Plus className="h-4 w-4" />
-                  )}
-                  {isUploadingPdf ? 'Uploading...' : 'Add PDF'}
-                </Button>
-                <input
-                  type="file"
-                  id="pdf-upload"
-                  accept="application/pdf"
-                  style={{ display: 'none' }}
-                  onChange={(e) => {
-                    if (e.target.files?.[0]) {
-                      addPdfItem(e.target.files[0]);
-                    }
-                  }}
-                />
-                {isUploadingPdf && (
-                  <div className="mt-2">
-                    <Progress value={uploadProgress} className="w-full" />
-                    <p className="text-sm text-center mt-1">{Math.round(uploadProgress)}%</p>
-                  </div>
-                )}
               </CardContent>
             </Card>
           </div>
