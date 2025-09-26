@@ -12,13 +12,15 @@ import MathRichTextEditor from '@/components/MathRichTextEditor';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Save, Plus, Trash2, ArrowUp, ArrowDown, GripVertical } from 'lucide-react';
+import { Save, Plus, Trash2, ArrowUp, ArrowDown, GripVertical, File as FileIcon } from 'lucide-react';
 import type { ContentItem, CheatSheetCategory } from '@/integrations/firebase/types';
 import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { uploadFile, deleteFile } from '@/lib/database';
 import { SortableContext, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import EnhancedCategoryManager from '@/components/EnhancedCategoryManager';
 import CategoryDropdown from '@/components/CategoryDropdown';
+import PdfViewer from '@/components/PdfViewer';
 
 const moveItem = <T,>(array: T[], fromIndex: number, toIndex: number): T[] => {
   const newArray = array.slice();
@@ -60,6 +62,7 @@ const SortableItem = ({
               {item.type === 'text' && 'Text'}
               {item.type === 'math' && 'Math Formula'}
               {item.type === 'code' && 'Code'}
+              {item.type === 'pdf' && 'PDF Document'}
             </span>
             <span className="text-xs text-muted-foreground">#{index + 1}</span>
           </div>
@@ -128,6 +131,14 @@ const SortableItem = ({
             />
           </div>
         )}
+        {item.type === 'pdf' && item.fileUrl && (
+          <div>
+            <Label>PDF Preview</Label>
+            <div className="mt-2 rounded-lg border overflow-hidden">
+              <PdfViewer fileUrl={item.fileUrl} />
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -169,15 +180,39 @@ const CreateCheatSheet = () => {
   if (!isOnline) {
     return <Layout><div /></Layout>;
   }
-  const addContentItem = (type: 'text' | 'math' | 'code') => {
+  const addContentItem = (type: 'text' | 'math' | 'code' | 'pdf', data?: Partial<ContentItem>) => {
     const newItem: ContentItem = {
       id: crypto.randomUUID(),
       type,
       content: '',
       title: '',
       color: '#000000',
+      ...data,
     };
     setContentItems(prev => [...prev, newItem]);
+  };
+
+  const addPdfItem = async (file: File) => {
+    if (!file) return;
+    setIsLoading(true);
+    try {
+      const { url, path } = await uploadFile(file, "pdfs");
+      addContentItem('pdf', {
+        title: file.name,
+        fileUrl: url,
+        fileName: path,
+        content: `PDF file: ${file.name}`,
+      });
+    } catch (error) {
+      console.error("Error uploading PDF:", error);
+      toast({
+        title: "Error",
+        description: "Failed to upload PDF. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const updateContentItem = (id: string, updates: Partial<ContentItem>) => {
@@ -186,7 +221,24 @@ const CreateCheatSheet = () => {
     );
   };
 
-  const removeContentItem = (id: string) => {
+  const removeContentItem = async (id: string) => {
+    const itemToRemove = contentItems.find(item => item.id === id);
+    if (itemToRemove && itemToRemove.type === 'pdf' && itemToRemove.fileName) {
+      try {
+        await deleteFile(itemToRemove.fileName);
+        toast({
+          title: "Success",
+          description: "PDF file deleted successfully.",
+        });
+      } catch (error) {
+        console.error("Error deleting PDF file:", error);
+        toast({
+          title: "Error",
+          description: "Failed to delete PDF file from storage.",
+          variant: "destructive",
+        });
+      }
+    }
     setContentItems(prev => prev.filter(item => item.id !== id));
   };
 
@@ -363,6 +415,25 @@ const CreateCheatSheet = () => {
                   <Plus className="h-4 w-4" />
                   Add Code
                 </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => document.getElementById('pdf-upload')?.click()}
+                  className="w-full justify-start gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add PDF
+                </Button>
+                <input
+                  type="file"
+                  id="pdf-upload"
+                  accept="application/pdf"
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    if (e.target.files?.[0]) {
+                      addPdfItem(e.target.files[0]);
+                    }
+                  }}
+                />
               </CardContent>
             </Card>
           </div>
