@@ -15,7 +15,7 @@ import {
 } from 'firebase/firestore';
 import {
   ref,
-  uploadBytes,
+  uploadBytesResumable,
   getDownloadURL,
   deleteObject,
 } from "firebase/storage";
@@ -27,15 +27,37 @@ import {
 import { db, auth, storage } from './firebase';
 import type { ContentItem, CheatSheetCategory } from '@/integrations/firebase/types';
 
-export const uploadFile = async (
+export const uploadFile = (
   file: File,
-  path: string
+  path: string,
+  onProgress: (progress: number) => void
 ): Promise<{ url: string; path: string }> => {
-  const user = await ensureAnonymousSession();
-  const storageRef = ref(storage, `user/${user.uid}/${path}/${file.name}`);
-  await uploadBytes(storageRef, file);
-  const url = await getDownloadURL(storageRef);
-  return { url, path: storageRef.fullPath };
+  return new Promise(async (resolve, reject) => {
+    const user = await ensureAnonymousSession();
+    const storageRef = ref(storage, `user/${user.uid}/${path}/${file.name}`);
+    const uploadTask = uploadBytesResumable(storageRef, file);
+
+    uploadTask.on(
+      "state_changed",
+      (snapshot) => {
+        const progress =
+          (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        onProgress(progress);
+      },
+      (error) => {
+        console.error("Upload failed:", error);
+        reject(error);
+      },
+      async () => {
+        try {
+          const url = await getDownloadURL(uploadTask.snapshot.ref);
+          resolve({ url, path: uploadTask.snapshot.ref.fullPath });
+        } catch (error) {
+          reject(error);
+        }
+      }
+    );
+  });
 };
 
 export const deleteFile = async (filePath: string): Promise<boolean> => {
