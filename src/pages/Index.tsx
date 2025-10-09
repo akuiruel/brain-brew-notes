@@ -93,24 +93,22 @@ const Index = () => {
       const customCat = customCategories.find(cat => cat.name === customCategoryName);
       const color = customCat?.color || '#64748b';
       return { 
-        headerBg: 'from-primary/5 to-primary/10', 
-        iconBg: 'bg-primary', 
-        border: 'border-primary/20',
+        gradient: 'from-slate-500 to-slate-600',
         customColor: color
       };
     }
     
     switch (category) {
       case 'mathematics':
-        return { headerBg: 'from-blue-50 to-blue-100', iconBg: 'bg-blue-600', border: 'border-blue-200' };
+        return { gradient: 'from-blue-500 to-blue-600' };
       case 'coding':
-        return { headerBg: 'from-green-50 to-emerald-100', iconBg: 'bg-emerald-600', border: 'border-emerald-200' };
+        return { gradient: 'from-purple-500 to-purple-600' };
       case 'software':
-        return { headerBg: 'from-purple-50 to-fuchsia-100', iconBg: 'bg-purple-600', border: 'border-purple-200' };
+        return { gradient: 'from-green-500 to-green-600' };
       case 'study':
-        return { headerBg: 'from-orange-50 to-amber-100', iconBg: 'bg-amber-600', border: 'border-amber-200' };
+        return { gradient: 'from-orange-500 to-orange-600' };
       default:
-        return { headerBg: 'from-slate-50 to-slate-100', iconBg: 'bg-slate-600', border: 'border-slate-200' };
+        return { gradient: 'from-slate-500 to-slate-600' };
     }
   };
 
@@ -329,90 +327,120 @@ const Index = () => {
               const displayCategory = sheet.customCategory || sheet.category;
               const theme = getCategoryTheme(sheet.category, sheet.customCategory);
               return (
-                <Card key={sheet.id} className="hover:shadow-lg transition-shadow group">
-                  <CardHeader className="pb-3">
-                    <div className={`rounded-xl p-4 bg-gradient-to-br ${theme.headerBg} border ${theme.border}`}>
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className={`h-9 w-9 rounded-lg flex items-center justify-center text-white ${theme.iconBg}`}>
-                              {getCategoryIcon(sheet.category, sheet.customCategory)}
-                            </div>
-                            <CardTitle className="text-lg font-semibold truncate">
-                              {sheet.title}
-                            </CardTitle>
-                          </div>
-                          <div className="flex items-center gap-2 mt-2">
-                            <Badge 
-                              variant="outline" 
-                              className={`text-xs ${getCategoryColor(sheet.category, sheet.customCategory)}`}
-                            >
-                              <span className="mr-1">
-                                {getCategoryIcon(sheet.category, sheet.customCategory)}
-                              </span>
-                              {displayCategory.charAt(0).toUpperCase() + displayCategory.slice(1)}
-                            </Badge>
-                            <span className="text-xs text-muted-foreground">
-                              {sheet.content?.items?.length || 0} sections
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      {sheet.description && (
-                        <p className="text-sm text-slate-700 line-clamp-2 mt-3">
-                          {sheet.description}
-                        </p>
-                      )}
+                <Card key={sheet.id} className="overflow-hidden hover:shadow-xl transition-all duration-300 border-0">
+                  {/* Gradient Header */}
+                  <div className={`relative bg-gradient-to-br ${theme.gradient} p-6 min-h-[140px]`}>
+                    {/* Icon */}
+                    <div className="h-12 w-12 rounded-xl bg-white flex items-center justify-center text-2xl shadow-lg">
+                      {getCategoryIcon(sheet.category, sheet.customCategory)}
                     </div>
-                  </CardHeader>
-                  
-                  <CardContent className="pt-3">
-                    <div className="flex items-center justify-between">
-                      <div className="text-xs text-muted-foreground">
-                        Updated {format(sheet.updatedAt instanceof Date ? sheet.updatedAt : (sheet.updatedAt as any).toDate ? (sheet.updatedAt as any).toDate() : new Date(), 'MMM d, yyyy')}
-                      </div>
-                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => {
-                            setSelectedSheet(sheet);
-                            setViewMode('viewer');
-                          }}
-                          className="h-8 w-8 p-0"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Link to={`/edit/${sheet.id}`}>
-                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                            <Edit className="h-4 w-4" />
+                    
+                    {/* Top Right Actions */}
+                    <div className="absolute top-4 right-4 flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 w-8 p-0 text-white hover:bg-white/20"
+                      >
+                        <Star className="h-4 w-4" />
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0 text-white hover:bg-white/20"
+                          >
+                            <MoreVertical className="h-4 w-4" />
                           </Button>
-                        </Link>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-destructive hover:text-destructive">
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete Cheat Sheet</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Are you sure you want to delete "{sheet.title}"? This action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => handleDelete(sheet.id!)}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                              >
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Cheat Sheet</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete "{sheet.title}"? This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDelete(sheet.id!)}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </div>
+
+                  {/* Content Section */}
+                  <CardContent className="p-6 space-y-4">
+                    {/* Title */}
+                    <h3 className="font-semibold text-lg line-clamp-1">
+                      {sheet.title}
+                    </h3>
+                    
+                    {/* Description */}
+                    {sheet.description && (
+                      <p className="text-sm text-muted-foreground line-clamp-2 min-h-[40px]">
+                        {sheet.description}
+                      </p>
+                    )}
+                    
+                    {/* Tags */}
+                    <div className="flex flex-wrap gap-2">
+                      <Badge variant="secondary" className="text-xs">
+                        {displayCategory.charAt(0).toUpperCase() + displayCategory.slice(1)}
+                      </Badge>
+                      <Badge variant="secondary" className="text-xs">
+                        {sheet.category === 'mathematics' ? 'Basics' : 
+                         sheet.category === 'coding' ? 'ES6' : 
+                         sheet.category === 'software' ? 'Hooks' : 'General'}
+                      </Badge>
+                      <Badge variant="secondary" className="text-xs">
+                        +1
+                      </Badge>
+                    </div>
+                    
+                    {/* Footer Metadata */}
+                    <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t">
+                      <div className="flex items-center gap-3">
+                        <span className="flex items-center gap-1">
+                          <FileText className="h-3 w-3" />
+                          {sheet.content?.items?.length || 0} sections
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Eye className="h-3 w-3" />
+                          {((sheet.content?.items?.length || 0) * 100).toLocaleString()} views
+                        </span>
                       </div>
+                      <span>
+                        {format(sheet.updatedAt instanceof Date ? sheet.updatedAt : (sheet.updatedAt as any).toDate ? (sheet.updatedAt as any).toDate() : new Date(), 'MMM d, yyyy')}
+                      </span>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-2 pt-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedSheet(sheet);
+                          setViewMode('viewer');
+                        }}
+                        className="flex-1"
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        View
+                      </Button>
+                      <Link to={`/edit/${sheet.id}`} className="flex-1">
+                        <Button size="sm" variant="outline" className="w-full">
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit
+                        </Button>
+                      </Link>
                     </div>
                   </CardContent>
                 </Card>
