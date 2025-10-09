@@ -1,28 +1,23 @@
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Copy, FileText, Bookmark } from 'lucide-react';
+import { Copy, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import type { ContentItem } from '@/integrations/firebase/types';
-import { cn } from '@/lib/utils';
 
 interface CheatSheetViewerProps {
-  sheetId: string;
   title: string;
   description?: string;
   category: string;
   items: ContentItem[];
-  toggleReadStatus: (itemId: string) => void;
 }
 
 const CheatSheetViewer: React.FC<CheatSheetViewerProps> = ({
-  sheetId,
   title,
   description,
   category,
-  items,
-  toggleReadStatus,
+  items
 }) => {
   const handleCopyContent = (content: string) => {
     const tempDiv = document.createElement('div');
@@ -34,9 +29,9 @@ const CheatSheetViewer: React.FC<CheatSheetViewerProps> = ({
 
   const renderContentItem = (item: ContentItem, index: number) => {
     return (
-      <Card key={item.id} className="overflow-hidden border-0 shadow-lg mb-6" data-read={item.isRead}>
+      <Card key={item.id} className="overflow-hidden border-0 shadow-lg mb-6">
         {/* Gradient Header */}
-        <div className={`bg-gradient-to-r p-6 text-white relative ${item.isRead ? 'from-green-500 to-green-600' : 'from-blue-500 to-blue-600'}`}>
+        <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white relative">
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-4">
               <div className="bg-white/20 p-3 rounded-lg backdrop-blur-sm">
@@ -56,25 +51,14 @@ const CheatSheetViewer: React.FC<CheatSheetViewerProps> = ({
                 <h3 className="text-2xl font-bold">{item.title || 'Untitled'}</h3>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Button
-                size="icon"
-                variant="ghost"
-                className="text-white hover:bg-white/20"
-                onClick={() => toggleReadStatus(item.id!)}
-                aria-label="Bookmark"
-              >
-                <Bookmark className={cn("w-5 h-5", item.isRead && "fill-white")} />
-              </Button>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="text-white hover:bg-white/20"
-                onClick={() => handleCopyContent(item.content || '')}
-              >
-                <Copy className="w-5 h-5" />
-              </Button>
-            </div>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="text-white hover:bg-white/20"
+              onClick={() => handleCopyContent(item.content || '')}
+            >
+              <Copy className="w-5 h-5" />
+            </Button>
           </div>
         </div>
 

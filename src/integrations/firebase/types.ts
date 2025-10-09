@@ -8,6 +8,7 @@ export interface CheatSheet {
   customCategory?: string;
   content: CheatSheetContent;
   isPublic: boolean;
+  isFavorite?: boolean;
   createdAt: Date | any;
   updatedAt: Date | any;
 }
@@ -22,7 +23,6 @@ export interface ContentItem {
   content: string;
   title?: string;
   color?: string;
-  isRead?: boolean;
 }
 
 export type CheatSheetCategory = 'mathematics' | 'software' | 'coding' | 'study' | 'other' | 'custom';
