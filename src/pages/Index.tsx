@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { useCheatSheets } from '@/hooks/useCheatSheets';
 import Layout from '@/components/Layout';
 import CheatSheetViewer from '@/components/CheatSheetViewer';
@@ -23,26 +23,28 @@ const presetCategories = [
 ];
 
 const Index = () => {
+  const { categoryId } = useParams();
   const { cheatSheets, isLoading, isOnline, deleteCheatSheet, customCategories } = useCheatSheets();
   const { toast } = useToast();
   const [selectedSheet, setSelectedSheet] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'viewer'>('grid');
 
   const filteredSheets = cheatSheets.filter(sheet => {
     const matchesSearch = sheet.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          sheet.description?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    let matchesCategory = categoryFilter === 'all';
-    if (!matchesCategory) {
-      if (categoryFilter.startsWith('custom-')) {
-        const customCategoryId = categoryFilter.replace('custom-', '');
-        const customCat = customCategories.find(cat => cat.id === customCategoryId);
-        matchesCategory = sheet.customCategory === customCat?.name;
-      } else {
-        matchesCategory = sheet.category === categoryFilter;
-      }
+    if (!categoryId || categoryId === 'all') {
+      return matchesSearch;
+    }
+
+    let matchesCategory = false;
+    if (categoryId.startsWith('custom-')) {
+      const customCategoryId = categoryId.replace('custom-', '');
+      const customCat = customCategories.find(cat => cat.id === customCategoryId);
+      matchesCategory = sheet.customCategory === customCat?.name;
+    } else {
+      matchesCategory = sheet.category === categoryId;
     }
     
     return matchesSearch && matchesCategory;
@@ -179,10 +181,7 @@ const Index = () => {
       <div className="space-y-6">
         {/* Welcome Header */}
         <div>
-          <h1 className="text-3xl font-bold mb-1">Welcome back, John! 👋</h1>
-          <p className="text-muted-foreground">
-            Here's what's happening with your cheat sheets today
-          </p>
+          <h1 className="text-3xl font-bold mb-1">Selamat datang di aplikasi cheat sheet</h1>
         </div>
 
         {/* Stats Cards */}
