@@ -109,21 +109,6 @@ export function AppSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
 
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <NavLink 
-                    to="/analytics"
-                    className={({ isActive }) => 
-                      isActive 
-                        ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' 
-                        : 'hover:bg-sidebar-accent/50'
-                    }
-                  >
-                    <BarChart3 className="h-4 w-4" />
-                    {!collapsed && <span>Analytics</span>}
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -133,16 +118,27 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton className="justify-between">
-                  <div className="flex items-center gap-2">
-                    <Folder className="h-4 w-4" />
-                    {!collapsed && <span>All</span>}
-                  </div>
-                  {!collapsed && (
-                    <Badge variant="secondary" className="text-xs">
-                      {totalSheets}
-                    </Badge>
-                  )}
+                <SidebarMenuButton asChild>
+                  <NavLink
+                    to="/category/all"
+                    className={({ isActive }) =>
+                      isActive
+                        ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
+                        : 'hover:bg-sidebar-accent/50'
+                    }
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      <div className="flex items-center gap-2">
+                        <Folder className="h-4 w-4" />
+                        {!collapsed && <span>All</span>}
+                      </div>
+                      {!collapsed && (
+                        <Badge variant="secondary" className="text-xs">
+                          {totalSheets}
+                        </Badge>
+                      )}
+                    </div>
+                  </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
 
@@ -150,16 +146,27 @@ export function AppSidebar() {
                 const count = getCategoryCount(category.id);
                 return (
                   <SidebarMenuItem key={category.id}>
-                    <SidebarMenuButton className="justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm">{category.icon}</span>
-                        {!collapsed && <span>{category.name}</span>}
-                      </div>
-                      {!collapsed && count > 0 && (
-                        <Badge variant="secondary" className="text-xs">
-                          {count}
-                        </Badge>
-                      )}
+                    <SidebarMenuButton asChild>
+                      <NavLink
+                        to={`/category/${category.id}`}
+                        className={({ isActive }) =>
+                          isActive
+                            ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
+                            : 'hover:bg-sidebar-accent/50'
+                        }
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm">{category.icon}</span>
+                            {!collapsed && <span>{category.name}</span>}
+                          </div>
+                          {!collapsed && count > 0 && (
+                            <Badge variant="secondary" className="text-xs">
+                              {count}
+                            </Badge>
+                          )}
+                        </div>
+                      </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
@@ -169,16 +176,27 @@ export function AppSidebar() {
                 const count = getCustomCategoryCount(category.name);
                 return (
                   <SidebarMenuItem key={category.id}>
-                    <SidebarMenuButton className="justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm">{category.icon}</span>
-                        {!collapsed && <span>{category.name}</span>}
-                      </div>
-                      {!collapsed && count > 0 && (
-                        <Badge variant="secondary" className="text-xs">
-                          {count}
-                        </Badge>
-                      )}
+                    <SidebarMenuButton asChild>
+                      <NavLink
+                        to={`/category/custom-${category.id}`}
+                        className={({ isActive }) =>
+                          isActive
+                            ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
+                            : 'hover:bg-sidebar-accent/50'
+                        }
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm">{category.icon}</span>
+                            {!collapsed && <span>{category.name}</span>}
+                          </div>
+                          {!collapsed && count > 0 && (
+                            <Badge variant="secondary" className="text-xs">
+                              {count}
+                            </Badge>
+                          )}
+                        </div>
+                      </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
@@ -187,22 +205,6 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-
-      <SidebarFooter className="border-t border-sidebar-border p-4">
-        <div className="flex items-center gap-3">
-          <Avatar className="h-8 w-8 flex-shrink-0">
-            <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-              JD
-            </AvatarFallback>
-          </Avatar>
-          {!collapsed && (
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-sidebar-foreground truncate">John Doe</p>
-              <p className="text-xs text-muted-foreground truncate">john@example.com</p>
-            </div>
-          )}
-        </div>
-      </SidebarFooter>
     </Sidebar>
   );
 }
