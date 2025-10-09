@@ -1,4 +1,4 @@
-import { FileText, Home, Star, Clock, Folder } from 'lucide-react';
+import { FileText, Home, Star, Clock, BarChart3, Folder } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import {
   Sidebar,
@@ -10,10 +10,12 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarHeader,
+  SidebarFooter,
+  useSidebar,
 } from '@/components/ui/sidebar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useCheatSheets } from '@/hooks/useCheatSheets';
-import { useSidebar } from '@/components/ui/sidebar';
 
 const presetCategories = [
   { id: 'mathematics', name: 'Mathematics', icon: '🧮' },
@@ -47,8 +49,8 @@ export function AppSidebar() {
           </div>
           {!collapsed && (
             <div className="flex-1 min-w-0">
-              <h2 className="text-base font-bold text-sidebar-foreground truncate">CheatSheet</h2>
-              <p className="text-sm text-muted-foreground truncate">Knowledge Base</p>
+              <h2 className="text-sm font-bold text-sidebar-foreground truncate">CheatSheet</h2>
+              <p className="text-xs text-muted-foreground truncate">Knowledge Base</p>
             </div>
           )}
         </div>
@@ -70,7 +72,7 @@ export function AppSidebar() {
                     }
                   >
                     <Home className="h-4 w-4" />
-                    {!collapsed && <span className="text-base">Dashboard</span>}
+                    {!collapsed && <span>Dashboard</span>}
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -86,7 +88,7 @@ export function AppSidebar() {
                     }
                   >
                     <Star className="h-4 w-4" />
-                    {!collapsed && <span className="text-base">Favorites</span>}
+                    {!collapsed && <span>Favorites</span>}
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -102,7 +104,7 @@ export function AppSidebar() {
                     }
                   >
                     <Clock className="h-4 w-4" />
-                    {!collapsed && <span className="text-base">Recent</span>}
+                    {!collapsed && <span>Recent</span>}
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -112,7 +114,7 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel className="text-sm">CATEGORIES</SidebarGroupLabel>
+          <SidebarGroupLabel>CATEGORIES</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
@@ -128,7 +130,7 @@ export function AppSidebar() {
                     <div className="flex items-center justify-between w-full">
                       <div className="flex items-center gap-2">
                         <Folder className="h-4 w-4" />
-                        {!collapsed && <span className="text-base">All</span>}
+                        {!collapsed && <span>All</span>}
                       </div>
                       {!collapsed && (
                         <Badge variant="secondary" className="text-xs">
@@ -155,8 +157,8 @@ export function AppSidebar() {
                       >
                         <div className="flex items-center justify-between w-full">
                           <div className="flex items-center gap-2">
-                            <span className="text-base">{category.icon}</span>
-                            {!collapsed && <span className="text-base">{category.name}</span>}
+                            <span className="text-sm">{category.icon}</span>
+                            {!collapsed && <span>{category.name}</span>}
                           </div>
                           {!collapsed && count > 0 && (
                             <Badge variant="secondary" className="text-xs">
@@ -185,8 +187,8 @@ export function AppSidebar() {
                       >
                         <div className="flex items-center justify-between w-full">
                           <div className="flex items-center gap-2">
-                            <span className="text-base">{category.icon}</span>
-                            {!collapsed && <span className="text-base">{category.name}</span>}
+                            <span className="text-sm">{category.icon}</span>
+                            {!collapsed && <span>{category.name}</span>}
                           </div>
                           {!collapsed && count > 0 && (
                             <Badge variant="secondary" className="text-xs">
