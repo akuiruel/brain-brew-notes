@@ -1,11 +1,11 @@
 import { ReactNode } from 'react';
-import { Button } from '@/components/ui/button';
-import { Plus, FileText, WifiOff, AlertTriangle } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { WifiOff, AlertTriangle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { db } from '@/lib/firebase';
 import { collection, getDocs } from 'firebase/firestore';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { AppSidebar } from '@/components/AppSidebar';
 
 interface LayoutProps {
   children: ReactNode;
@@ -48,82 +48,60 @@ const Layout = ({ children }: LayoutProps) => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
-      {(!isOnline || !isConnected) && (
-        <div className="bg-destructive/10 border-b border-destructive/20 p-3">
-          <Alert className="border-destructive/20">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription className="text-destructive">
-              {!isOnline 
-                ? "No internet connection. Please connect to the internet to use this app."
-                : "Unable to connect to the database. Please check your internet connection."
-              }
-            </AlertDescription>
-          </Alert>
-        </div>
-      )}
-      
-      <header className="border-b border-border bg-gradient-to-r from-[hsl(var(--header-bg))] to-[hsl(var(--header-accent))] text-white shadow-lg">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <Link to="/" className="flex items-center gap-2">
-              <FileText className="h-6 w-6 text-white" />
-              <h1 className="text-xl font-bold text-white">CheatSheet App</h1>
-            </Link>
-            <nav className="flex items-center gap-4">
-              <Link to="/">
-                <Button variant="ghost" className="text-white hover:bg-white/20 hover:text-white">Dashboard</Button>
-              </Link>
-              <Link to="/create">
-                <Button variant="ghost" className="gap-2 text-white hover:bg-white/20 hover:text-white">
-                  <Plus className="h-4 w-4" />
-                  Create
-                </Button>
-              </Link>
-            </nav>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 text-xs">
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-background">
+        <AppSidebar />
+        
+        <div className="flex-1 flex flex-col w-full">
+          {(!isOnline || !isConnected) && (
+            <div className="bg-destructive/10 border-b border-destructive/20 p-3">
+              <Alert className="border-destructive/20">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription className="text-destructive">
+                  {!isOnline 
+                    ? "No internet connection. Please connect to the internet to use this app."
+                    : "Unable to connect to the database. Please check your internet connection."
+                  }
+                </AlertDescription>
+              </Alert>
+            </div>
+          )}
+          
+          <header className="border-b border-border bg-background">
+            <div className="flex items-center gap-4 px-6 py-4">
+              <SidebarTrigger />
               {!isOnline || !isConnected && (
-                <>
+                <div className="flex items-center gap-1 text-xs ml-auto">
                   <WifiOff className="h-3 w-3 text-red-500" />
                   <span className="text-red-600">
                     {!isOnline ? 'No Internet' : 'Disconnected'}
                   </span>
-                </>
+                </div>
               )}
             </div>
-          </div>
-        </div>
-      </header>
-      
-      <main className="container mx-auto px-4 py-8">
-        {(!isOnline || !isConnected) ? (
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="text-center space-y-4">
-              <WifiOff className="h-16 w-16 text-muted-foreground mx-auto" />
-              <div>
-                <h2 className="text-xl font-semibold mb-2">Connection Required</h2>
-                <p className="text-muted-foreground max-w-md">
-                  This application requires an active internet connection to function properly. 
-                  Please check your connection and try again.
-                </p>
+          </header>
+          
+          <main className="flex-1 overflow-auto px-6 py-8">
+            {(!isOnline || !isConnected) ? (
+              <div className="flex items-center justify-center min-h-[400px]">
+                <div className="text-center space-y-4">
+                  <WifiOff className="h-16 w-16 text-muted-foreground mx-auto" />
+                  <div>
+                    <h2 className="text-xl font-semibold mb-2">Connection Required</h2>
+                    <p className="text-muted-foreground max-w-md">
+                      This application requires an active internet connection to function properly. 
+                      Please check your connection and try again.
+                    </p>
+                  </div>
+                </div>
               </div>
-              <Button 
-                onClick={() => window.location.reload()} 
-                variant="outline"
-                className="gap-2"
-              >
-                <AlertTriangle className="h-4 w-4" />
-                Retry Connection
-              </Button>
-            </div>
-          </div>
-        ) : (
-          children
-        )}
-      </main>
-    </div>
+            ) : (
+              children
+            )}
+          </main>
+        </div>
+      </div>
+    </SidebarProvider>
   );
 };
 

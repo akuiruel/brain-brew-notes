@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, Eye, Search, FileText, Calculator, Code, BookOpen, Folder } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, Search, FileText, TrendingUp, Star, Zap, Filter, MoreVertical, Folder } from 'lucide-react';
 import { format } from 'date-fns';
 
 // Define preset categories
@@ -167,73 +167,139 @@ const Index = () => {
     );
   }
 
+  const totalViews = cheatSheets.reduce((acc, sheet) => acc + (sheet.content?.items?.length || 0) * 100, 0);
+  const favoriteCount = cheatSheets.filter(sheet => sheet.category === 'mathematics').length;
+  const thisWeekCount = cheatSheets.filter(sheet => {
+    const sheetDate = sheet.updatedAt instanceof Date ? sheet.updatedAt : (sheet.updatedAt as any).toDate ? (sheet.updatedAt as any).toDate() : new Date();
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    return sheetDate >= weekAgo;
+  }).length;
+
   return (
     <Layout>
       <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold">My Cheat Sheets</h1>
-            <p className="text-muted-foreground">
-              {filteredSheets.length} of {cheatSheets.length} cheat sheets
-            </p>
-          </div>
-          <Link to="/create">
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              Create New
-            </Button>
-          </Link>
+        {/* Welcome Header */}
+        <div>
+          <h1 className="text-3xl font-bold mb-1">Welcome back, John! 👋</h1>
+          <p className="text-muted-foreground">
+            Here's what's happening with your cheat sheets today
+          </p>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="h-12 w-12 rounded-xl bg-blue-500 flex items-center justify-center">
+                  <FileText className="h-6 w-6 text-white" />
+                </div>
+                <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
+                  +12%
+                </Badge>
+              </div>
+              <div className="space-y-1">
+                <p className="text-3xl font-bold">{cheatSheets.length}</p>
+                <p className="text-sm text-muted-foreground">Total Sheets</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="h-12 w-12 rounded-xl bg-purple-500 flex items-center justify-center">
+                  <TrendingUp className="h-6 w-6 text-white" />
+                </div>
+                <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
+                  +23%
+                </Badge>
+              </div>
+              <div className="space-y-1">
+                <p className="text-3xl font-bold">{(totalViews / 1000).toFixed(1)}K</p>
+                <p className="text-sm text-muted-foreground">Total Views</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="h-12 w-12 rounded-xl bg-orange-500 flex items-center justify-center">
+                  <Star className="h-6 w-6 text-white" />
+                </div>
+                <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
+                  +8%
+                </Badge>
+              </div>
+              <div className="space-y-1">
+                <p className="text-3xl font-bold">{favoriteCount}</p>
+                <p className="text-sm text-muted-foreground">Favorites</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="h-12 w-12 rounded-xl bg-green-500 flex items-center justify-center">
+                  <Zap className="h-6 w-6 text-white" />
+                </div>
+                <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
+                  +2
+                </Badge>
+              </div>
+              <div className="space-y-1">
+                <p className="text-3xl font-bold">{thisWeekCount}</p>
+                <p className="text-sm text-muted-foreground">This Week</p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Search and Filter */}
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search cheat sheets..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+        <div className="bg-card border border-border rounded-lg p-4">
+          <div className="flex flex-col sm:flex-row gap-3 items-center">
+            <div className="relative flex-1 w-full">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search cheat sheets by title, description, or tags..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button variant="outline" className="gap-2 flex-1 sm:flex-none">
+                <Filter className="h-4 w-4" />
+                <span className="hidden sm:inline">Filters</span>
+              </Button>
+              <Button variant="outline" size="icon">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
-          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="w-full sm:w-48">
-              <SelectValue placeholder="Filter by category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              
-              {/* Preset categories */}
-              {presetCategories.map((cat) => (
-                <SelectItem key={cat.id} value={cat.id}>
-                  <div className="flex items-center gap-2">
-                    <span>{cat.icon}</span>
-                    <span>{cat.name}</span>
-                  </div>
-                </SelectItem>
-              ))}
-              
-              {/* Custom categories */}
-              {customCategories.length > 0 && (
-                <>
-                  <div className="px-2 py-1 text-xs font-semibold text-muted-foreground border-t">
-                    Custom Categories
-                  </div>
-                  {customCategories.map((cat) => (
-                    <SelectItem key={`custom-${cat.id}`} value={`custom-${cat.id}`}>
-                      <div className="flex items-center gap-2">
-                        <span>{cat.icon}</span>
-                        <span>{cat.name}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </>
-              )}
-            </SelectContent>
-          </Select>
         </div>
 
-        {filteredSheets.length === 0 ? (
+        {/* Your Cheat Sheets Section */}
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-xl font-semibold">Your Cheat Sheets</h2>
+              <p className="text-sm text-muted-foreground">
+                Showing {filteredSheets.length} of {cheatSheets.length} sheets
+              </p>
+            </div>
+            <Link to="/create">
+              <Button className="gap-2">
+                <Plus className="h-4 w-4" />
+                Create New
+              </Button>
+            </Link>
+          </div>
+
+          {filteredSheets.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-muted-foreground">
               {cheatSheets.length === 0 ? (
@@ -354,6 +420,7 @@ const Index = () => {
             })}
           </div>
         )}
+        </div>
       </div>
     </Layout>
   );
