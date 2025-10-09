@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, Eye, Search, FileText, TrendingUp, Star, Zap, Filter, MoreVertical, Folder } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, Search, FileText, TrendingUp, Star, Zap, Filter, MoreVertical, Folder, ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
 
 // Define preset categories
@@ -24,11 +24,13 @@ const presetCategories = [
 
 const Index = () => {
   const { categoryId } = useParams();
-  const { cheatSheets, isLoading, isOnline, deleteCheatSheet, customCategories } = useCheatSheets();
+  const { cheatSheets, isLoading, isOnline, deleteCheatSheet, customCategories, toggleContentItemReadStatus } = useCheatSheets();
   const { toast } = useToast();
-  const [selectedSheet, setSelectedSheet] = useState<any>(null);
+  const [selectedSheetId, setSelectedSheetId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'viewer'>('grid');
+
+  const selectedSheet = selectedSheetId ? cheatSheets.find(sheet => sheet.id === selectedSheetId) : null;
 
   const filteredSheets = cheatSheets.filter(sheet => {
     const matchesSearch = sheet.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -136,18 +138,20 @@ const Index = () => {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <Button 
-              variant="outline" 
+              variant="secondary"
               onClick={() => {
                 setViewMode('grid');
-                setSelectedSheet(null);
+                setSelectedSheetId(null);
               }}
+              className="gap-2"
             >
-              ← Back to Grid
+              <ArrowLeft className="h-4 w-4" />
+              Back to Grid
             </Button>
             <div className="flex flex-col sm:flex-row gap-2 items-center">
               <div className="flex gap-2 w-full sm:w-auto">
                 <Link to={`/edit/${selectedSheet.id}`} className="flex-1 sm:flex-none">
-                  <Button variant="outline" className="gap-2 w-full">
+                  <Button variant="secondary" className="gap-2 w-full">
                     <Edit className="h-4 w-4" />
                     <span className="hidden sm:inline">Edit</span>
                   </Button>
@@ -157,10 +161,12 @@ const Index = () => {
           </div>
           
           <CheatSheetViewer
+            sheetId={selectedSheet.id}
             title={selectedSheet.title}
             description={selectedSheet.description}
             category={selectedSheet.category}
             items={selectedSheet.content?.items || []}
+            toggleReadStatus={(itemId) => toggleContentItemReadStatus(selectedSheet.id, itemId)}
           />
         </div>
       </Layout>
@@ -268,11 +274,11 @@ const Index = () => {
               />
             </div>
             <div className="flex gap-2 w-full sm:w-auto">
-              <Button variant="outline" className="gap-2 flex-1 sm:flex-none">
+              <Button variant="secondary" className="gap-2 flex-1 sm:flex-none">
                 <Filter className="h-4 w-4" />
                 <span className="hidden sm:inline">Filters</span>
               </Button>
-              <Button variant="outline" size="icon">
+              <Button variant="secondary" size="icon">
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </div>
@@ -338,7 +344,7 @@ const Index = () => {
                     <div className="absolute top-4 right-4 flex gap-2">
                       <Button
                         size="sm"
-                        variant="ghost"
+                        variant="secondary"
                         className="h-8 w-8 p-0 text-white hover:bg-white/20"
                       >
                         <Star className="h-4 w-4" />
@@ -347,7 +353,7 @@ const Index = () => {
                         <AlertDialogTrigger asChild>
                           <Button
                             size="sm"
-                            variant="ghost"
+                            variant="secondary"
                             className="h-8 w-8 p-0 text-white hover:bg-white/20"
                           >
                             <MoreVertical className="h-4 w-4" />
@@ -364,8 +370,9 @@ const Index = () => {
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
                             <AlertDialogAction
                               onClick={() => handleDelete(sheet.id!)}
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 gap-2"
                             >
+                              <Trash2 className="h-4 w-4" />
                               Delete
                             </AlertDialogAction>
                           </AlertDialogFooter>
@@ -424,9 +431,9 @@ const Index = () => {
                     <div className="flex gap-2 pt-2">
                       <Button
                         size="sm"
-                        variant="outline"
+                        variant="secondary"
                         onClick={() => {
-                          setSelectedSheet(sheet);
+                          setSelectedSheetId(sheet.id);
                           setViewMode('viewer');
                         }}
                         className="flex-1"
@@ -435,7 +442,7 @@ const Index = () => {
                         View
                       </Button>
                       <Link to={`/edit/${sheet.id}`} className="flex-1">
-                        <Button size="sm" variant="outline" className="w-full">
+                        <Button size="sm" variant="secondary" className="w-full">
                           <Edit className="h-4 w-4 mr-2" />
                           Edit
                         </Button>
