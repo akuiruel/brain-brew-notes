@@ -64,10 +64,10 @@ const SortableItem = ({
             <span className="text-xs text-muted-foreground">#{index + 1}</span>
           </div>
           <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" onClick={() => onMoveTo(item.id, Math.max(1, index))} disabled={index === 0}>
+            <Button size="sm" variant="secondary" onClick={() => onMoveTo(item.id, Math.max(1, index))} disabled={index === 0}>
               <ArrowUp className="h-4 w-4" />
             </Button>
-            <Button size="sm" variant="outline" onClick={() => onMoveTo(item.id, Math.min(length, index + 2))} disabled={index === length - 1}>
+            <Button size="sm" variant="secondary" onClick={() => onMoveTo(item.id, Math.min(length, index + 2))} disabled={index === length - 1}>
               <ArrowDown className="h-4 w-4" />
             </Button>
             <Select value={String(index + 1)} onValueChange={(v) => onMoveTo(item.id, parseInt(v, 10))}>
@@ -80,7 +80,7 @@ const SortableItem = ({
                 ))}
               </SelectContent>
             </Select>
-            <Button size="sm" variant="ghost" onClick={() => onRemove(item.id)}>
+            <Button size="sm" variant="destructive" onClick={() => onRemove(item.id)}>
               <Trash2 className="h-4 w-4" />
             </Button>
           </div>
@@ -176,6 +176,7 @@ const CreateCheatSheet = () => {
       content: '',
       title: '',
       color: '#000000',
+      isRead: false,
     };
     setContentItems(prev => [...prev, newItem]);
   };
@@ -340,7 +341,7 @@ const CreateCheatSheet = () => {
               </CardHeader>
               <CardContent className="space-y-2">
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   onClick={() => addContentItem('text')}
                   className="w-full justify-start gap-2"
                 >
@@ -348,7 +349,7 @@ const CreateCheatSheet = () => {
                   Add Text
                 </Button>
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   onClick={() => addContentItem('math')}
                   className="w-full justify-start gap-2"
                 >
@@ -356,7 +357,7 @@ const CreateCheatSheet = () => {
                   Add Math Formula
                 </Button>
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   onClick={() => addContentItem('code')}
                   className="w-full justify-start gap-2"
                 >
