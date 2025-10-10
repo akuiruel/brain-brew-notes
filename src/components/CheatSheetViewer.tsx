@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Copy, FileText } from 'lucide-react';
+import { Copy, FileText, BookmarkCheck, Bookmark } from 'lucide-react';
 import { toast } from 'sonner';
 import type { ContentItem } from '@/integrations/firebase/types';
 
@@ -19,6 +19,32 @@ const CheatSheetViewer: React.FC<CheatSheetViewerProps> = ({
   category,
   items
 }) => {
+  const [readItems, setReadItems] = useState<Set<string>>(new Set());
+
+  // Load read status from localStorage
+  useEffect(() => {
+    const savedReadItems = localStorage.getItem(`read-items-${title}`);
+    if (savedReadItems) {
+      setReadItems(new Set(JSON.parse(savedReadItems)));
+    }
+  }, [title]);
+
+  // Save read status to localStorage
+  const toggleReadStatus = (itemId: string) => {
+    setReadItems(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(itemId)) {
+        newSet.delete(itemId);
+        toast.success('Marked as unread');
+      } else {
+        newSet.add(itemId);
+        toast.success('Marked as read');
+      }
+      localStorage.setItem(`read-items-${title}`, JSON.stringify([...newSet]));
+      return newSet;
+    });
+  };
+
   const handleCopyContent = (content: string) => {
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = content;
@@ -28,8 +54,10 @@ const CheatSheetViewer: React.FC<CheatSheetViewerProps> = ({
   };
 
   const renderContentItem = (item: ContentItem, index: number) => {
+    const isRead = readItems.has(item.id);
+    
     return (
-      <Card key={item.id} className="overflow-hidden border-0 shadow-lg mb-6">
+      <Card key={item.id} className={`overflow-hidden border-0 shadow-lg mb-6 transition-all ${isRead ? 'opacity-60' : ''}`}>
         {/* Gradient Header */}
         <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white relative">
           <div className="flex items-start justify-between">
@@ -47,18 +75,34 @@ const CheatSheetViewer: React.FC<CheatSheetViewerProps> = ({
                     {item.type === 'math' && 'Math'}
                     {item.type === 'code' && 'Coding'}
                   </Badge>
+                  {isRead && (
+                    <Badge variant="secondary" className="bg-green-500/80 text-white border-0 text-xs">
+                      ✓ Read
+                    </Badge>
+                  )}
                 </div>
                 <h3 className="text-2xl font-bold">{item.title || 'Untitled'}</h3>
               </div>
             </div>
-            <Button
-              size="icon"
-              variant="ghost"
-              className="text-white hover:bg-white/20"
-              onClick={() => handleCopyContent(item.content || '')}
-            >
-              <Copy className="w-5 h-5" />
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                size="icon"
+                variant="ghost"
+                className="text-white hover:bg-white/20"
+                onClick={() => toggleReadStatus(item.id)}
+                title={isRead ? "Mark as unread" : "Mark as read"}
+              >
+                {isRead ? <BookmarkCheck className="w-5 h-5" /> : <Bookmark className="w-5 h-5" />}
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="text-white hover:bg-white/20"
+                onClick={() => handleCopyContent(item.content || '')}
+              >
+                <Copy className="w-5 h-5" />
+              </Button>
+            </div>
           </div>
         </div>
 

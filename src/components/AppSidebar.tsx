@@ -49,8 +49,8 @@ export function AppSidebar() {
           </div>
           {!collapsed && (
             <div className="flex-1 min-w-0">
-              <h2 className="text-sm font-bold text-sidebar-foreground truncate">CheatSheet</h2>
-              <p className="text-xs text-muted-foreground truncate">Knowledge Base</p>
+              <h2 className="text-base font-bold text-sidebar-foreground truncate">CheatSheet</h2>
+              <p className="text-sm text-muted-foreground truncate">Knowledge Base</p>
             </div>
           )}
         </div>
@@ -71,8 +71,8 @@ export function AppSidebar() {
                         : 'hover:bg-sidebar-accent/50'
                     }
                   >
-                    <Home className="h-4 w-4" />
-                    {!collapsed && <span>Dashboard</span>}
+                    <Home className="h-5 w-5" />
+                    {!collapsed && <span className="text-base">Dashboard</span>}
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -87,8 +87,8 @@ export function AppSidebar() {
                         : 'hover:bg-sidebar-accent/50'
                     }
                   >
-                    <Star className="h-4 w-4" />
-                    {!collapsed && <span>Favorites</span>}
+                    <Star className="h-5 w-5" />
+                    {!collapsed && <span className="text-base">Favorites</span>}
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -103,8 +103,8 @@ export function AppSidebar() {
                         : 'hover:bg-sidebar-accent/50'
                     }
                   >
-                    <Clock className="h-4 w-4" />
-                    {!collapsed && <span>Recent</span>}
+                    <Clock className="h-5 w-5" />
+                    {!collapsed && <span className="text-base">Recent</span>}
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -114,7 +114,7 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>CATEGORIES</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-sm font-semibold">CATEGORIES</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
@@ -129,8 +129,8 @@ export function AppSidebar() {
                   >
                     <div className="flex items-center justify-between w-full">
                       <div className="flex items-center gap-2">
-                        <Folder className="h-4 w-4" />
-                        {!collapsed && <span>All</span>}
+                        <Folder className="h-5 w-5" />
+                        {!collapsed && <span className="text-base">All</span>}
                       </div>
                       {!collapsed && (
                         <Badge variant="secondary" className="text-xs">
@@ -157,8 +157,8 @@ export function AppSidebar() {
                       >
                         <div className="flex items-center justify-between w-full">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm">{category.icon}</span>
-                            {!collapsed && <span>{category.name}</span>}
+                            <span className="text-lg">{category.icon}</span>
+                            {!collapsed && <span className="text-base">{category.name}</span>}
                           </div>
                           {!collapsed && count > 0 && (
                             <Badge variant="secondary" className="text-xs">
@@ -187,8 +187,8 @@ export function AppSidebar() {
                       >
                         <div className="flex items-center justify-between w-full">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm">{category.icon}</span>
-                            {!collapsed && <span>{category.name}</span>}
+                            <span className="text-lg">{category.icon}</span>
+                            {!collapsed && <span className="text-base">{category.name}</span>}
                           </div>
                           {!collapsed && count > 0 && (
                             <Badge variant="secondary" className="text-xs">

@@ -255,27 +255,16 @@ const Index = () => {
           </Card>
         </div>
 
-        {/* Search and Filter */}
+        {/* Search */}
         <div className="bg-card border border-border rounded-lg p-4">
-          <div className="flex flex-col sm:flex-row gap-3 items-center">
-            <div className="relative flex-1 w-full">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search cheat sheets by title, description, or tags..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <div className="flex gap-2 w-full sm:w-auto">
-              <Button variant="outline" className="gap-2 flex-1 sm:flex-none">
-                <Filter className="h-4 w-4" />
-                <span className="hidden sm:inline">Filters</span>
-              </Button>
-              <Button variant="outline" size="icon">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </div>
+          <div className="relative w-full">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search cheat sheets by title, description, or tags..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
           </div>
         </div>
 
@@ -289,7 +278,7 @@ const Index = () => {
               </p>
             </div>
             <Link to="/create">
-              <Button className="gap-2">
+              <Button className="gap-2 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600">
                 <Plus className="h-4 w-4" />
                 Create New
               </Button>
@@ -305,8 +294,8 @@ const Index = () => {
                   <h3 className="text-lg font-medium mb-2">No cheat sheets yet</h3>
                   <p className="mb-4">Create your first cheat sheet to get started!</p>
                   <Link to="/create">
-                    <Button>
-                      <Plus className="h-4 w-4 mr-2" />
+                    <Button className="gap-2 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600">
+                      <Plus className="h-4 w-4" />
                       Create Your First Cheat Sheet
                     </Button>
                   </Link>
@@ -424,18 +413,17 @@ const Index = () => {
                     <div className="flex gap-2 pt-2">
                       <Button
                         size="sm"
-                        variant="outline"
                         onClick={() => {
                           setSelectedSheet(sheet);
                           setViewMode('viewer');
                         }}
-                        className="flex-1"
+                        className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
                       >
                         <Eye className="h-4 w-4 mr-2" />
                         View
                       </Button>
                       <Link to={`/edit/${sheet.id}`} className="flex-1">
-                        <Button size="sm" variant="outline" className="w-full">
+                        <Button size="sm" className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white">
                           <Edit className="h-4 w-4 mr-2" />
                           Edit
                         </Button>
