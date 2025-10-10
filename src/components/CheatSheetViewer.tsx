@@ -156,16 +156,6 @@ const CheatSheetViewer: React.FC<CheatSheetViewerProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Back Button */}
-      <Button 
-        variant="ghost" 
-        className="text-primary hover:text-primary/80 -ml-2"
-        onClick={() => navigate('/')}
-      >
-        <ArrowLeft className="w-4 h-4 mr-2" />
-        Back to Dashboard
-      </Button>
-
       {/* Header Section */}
       <div className="flex items-start gap-6 pb-6">
         {/* Icon */}
