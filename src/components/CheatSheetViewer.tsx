@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Copy, FileText, BookmarkCheck, Bookmark } from 'lucide-react';
+import { Copy, FileText, BookmarkCheck, Bookmark, ArrowLeft, Star, Share2, MoreVertical, Eye, Calendar, FileStack } from 'lucide-react';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 import type { ContentItem } from '@/integrations/firebase/types';
 
 interface CheatSheetViewerProps {
@@ -19,7 +20,9 @@ const CheatSheetViewer: React.FC<CheatSheetViewerProps> = ({
   category,
   items
 }) => {
+  const navigate = useNavigate();
   const [readItems, setReadItems] = useState<Set<string>>(new Set());
+  const [isFavorite, setIsFavorite] = useState(false);
 
   // Load read status from localStorage
   useEffect(() => {
@@ -153,18 +156,92 @@ const CheatSheetViewer: React.FC<CheatSheetViewerProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* Back Button */}
+      <Button 
+        variant="ghost" 
+        className="text-primary hover:text-primary/80 -ml-2"
+        onClick={() => navigate('/')}
+      >
+        <ArrowLeft className="w-4 h-4 mr-2" />
+        Back to Dashboard
+      </Button>
+
       {/* Header Section */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 p-6 rounded-xl border border-blue-200 dark:border-blue-800">
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">{title}</h1>
-            {description && (
-              <p className="text-muted-foreground text-lg leading-relaxed">{description}</p>
-            )}
+      <div className="flex items-start gap-6 pb-6">
+        {/* Icon */}
+        <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-6 rounded-2xl shadow-lg flex-shrink-0">
+          <FileText className="w-12 h-12 text-white" strokeWidth={2.5} />
+        </div>
+
+        {/* Title and Info */}
+        <div className="flex-1 min-w-0">
+          {/* Category Badges */}
+          <div className="flex flex-wrap gap-2 mb-3">
+            <Badge className="bg-blue-500 hover:bg-blue-600 text-white border-0">
+              Coding
+            </Badge>
+            <Badge className="bg-purple-500 hover:bg-purple-600 text-white border-0">
+              {category.charAt(0).toUpperCase() + category.slice(1)}
+            </Badge>
+            <Badge className="bg-purple-500 hover:bg-purple-600 text-white border-0">
+              Basics
+            </Badge>
+            <Badge className="bg-purple-500 hover:bg-purple-600 text-white border-0">
+              Tutorial
+            </Badge>
           </div>
-          <Badge variant="secondary" className="text-sm px-3 py-1">
-            {category.charAt(0).toUpperCase() + category.slice(1)}
-          </Badge>
+
+          {/* Title */}
+          <h1 className="text-3xl font-bold text-foreground mb-4">{title}</h1>
+
+          {/* Stats */}
+          <div className="flex flex-wrap items-center gap-6 text-sm">
+            <div className="flex items-center gap-2 text-purple-600">
+              <Eye className="w-4 h-4" />
+              <span className="font-medium">1,243 views</span>
+            </div>
+            <div className="flex items-center gap-2 text-blue-600">
+              <Calendar className="w-4 h-4" />
+              <span className="font-medium">Updated Oct 2, 2025</span>
+            </div>
+            <div className="flex items-center gap-2 text-pink-600">
+              <FileStack className="w-4 h-4" />
+              <span className="font-medium">{items.length} sections</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-2 flex-shrink-0">
+          <Button
+            size="icon"
+            variant="outline"
+            className={`rounded-lg ${isFavorite ? 'bg-yellow-50 text-yellow-600 border-yellow-300' : ''}`}
+            onClick={() => {
+              setIsFavorite(!isFavorite);
+              toast.success(isFavorite ? 'Removed from favorites' : 'Added to favorites');
+            }}
+          >
+            <Star className={`w-5 h-5 ${isFavorite ? 'fill-yellow-600' : ''}`} />
+          </Button>
+          <Button
+            size="icon"
+            variant="outline"
+            className="rounded-lg"
+            onClick={() => {
+              navigator.clipboard.writeText(window.location.href);
+              toast.success('Link copied to clipboard');
+            }}
+          >
+            <Share2 className="w-5 h-5" />
+          </Button>
+          <Button
+            size="icon"
+            variant="outline"
+            className="rounded-lg"
+          >
+            <MoreVertical className="w-5 h-5" />
+          </Button>
         </div>
       </div>
 
