@@ -12,17 +12,22 @@ interface CheatSheetViewerProps {
   description?: string;
   category: string;
   items: ContentItem[];
+  views: number;
+  isFavorite: boolean;
+  onToggleFavorite: () => void;
 }
 
 const CheatSheetViewer: React.FC<CheatSheetViewerProps> = ({
   title,
   description,
   category,
-  items
+  items,
+  views,
+  isFavorite,
+  onToggleFavorite
 }) => {
   const navigate = useNavigate();
   const [readItems, setReadItems] = useState<Set<string>>(new Set());
-  const [isFavorite, setIsFavorite] = useState(false);
 
   // Load read status from localStorage
   useEffect(() => {
@@ -157,16 +162,16 @@ const CheatSheetViewer: React.FC<CheatSheetViewerProps> = ({
   return (
     <div className="space-y-6">
       {/* Header Section */}
-      <div className="flex items-start gap-6 pb-6">
+      <div className="flex flex-col items-center md:flex-row md:items-start gap-6 pb-6">
         {/* Icon */}
         <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-6 rounded-2xl shadow-lg flex-shrink-0">
           <FileText className="w-12 h-12 text-white" strokeWidth={2.5} />
         </div>
 
         {/* Title and Info */}
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 text-center md:text-left">
           {/* Category Badges */}
-          <div className="flex flex-wrap gap-2 mb-3">
+          <div className="flex flex-wrap justify-center md:justify-start gap-2 mb-3">
             <Badge className="bg-blue-500 hover:bg-blue-600 text-white border-0">
               Coding
             </Badge>
@@ -185,10 +190,10 @@ const CheatSheetViewer: React.FC<CheatSheetViewerProps> = ({
           <h1 className="text-3xl font-bold text-foreground mb-4">{title}</h1>
 
           {/* Stats */}
-          <div className="flex flex-wrap items-center gap-6 text-sm">
+          <div className="flex flex-wrap justify-center md:justify-start items-center gap-6 text-sm">
             <div className="flex items-center gap-2 text-purple-600">
               <Eye className="w-4 h-4" />
-              <span className="font-medium">1,243 views</span>
+              <span className="font-medium">{(views || 0).toLocaleString()} views</span>
             </div>
             <div className="flex items-center gap-2 text-blue-600">
               <Calendar className="w-4 h-4" />
@@ -208,8 +213,8 @@ const CheatSheetViewer: React.FC<CheatSheetViewerProps> = ({
             variant="outline"
             className={`rounded-lg ${isFavorite ? 'bg-yellow-50 text-yellow-600 border-yellow-300' : ''}`}
             onClick={() => {
-              setIsFavorite(!isFavorite);
-              toast.success(isFavorite ? 'Removed from favorites' : 'Added to favorites');
+              onToggleFavorite();
+              toast.success(!isFavorite ? 'Added to favorites' : 'Removed from favorites');
             }}
           >
             <Star className={`w-5 h-5 ${isFavorite ? 'fill-yellow-600' : ''}`} />

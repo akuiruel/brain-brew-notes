@@ -11,7 +11,8 @@ import {
   orderBy,
   serverTimestamp,
   Timestamp,
-  deleteField
+  deleteField,
+  increment
 } from 'firebase/firestore';
 import { 
   signInAnonymously, 
@@ -34,6 +35,9 @@ export interface CheatSheetData {
   isPublic?: boolean;
   createdAt?: Date | Timestamp;
   updatedAt?: Date | Timestamp;
+  views?: number;
+  isFavorite?: boolean;
+  lastViewedAt?: Date | Timestamp;
 }
 
 export interface CustomCategoryData {
@@ -85,6 +89,9 @@ const convertFirestoreDoc = (doc: any): CheatSheetData => {
     isPublic: data.isPublic || false,
     createdAt: data.createdAt?.toDate() || new Date(),
     updatedAt: data.updatedAt?.toDate() || new Date(),
+    views: data.views || 0,
+    isFavorite: data.isFavorite || false,
+    lastViewedAt: data.lastViewedAt?.toDate() || null,
   };
 };
 
@@ -144,6 +151,9 @@ export const createCheatSheet = async (cheatSheetData: Omit<CheatSheetData, 'id'
   isPublic: cheatSheetData.isPublic || false,
   createdAt: serverTimestamp(),
   updatedAt: serverTimestamp(),
+  views: 0,
+  isFavorite: false,
+  lastViewedAt: serverTimestamp(),
 };
 
 // Only include customCategory if it has a value
@@ -210,6 +220,23 @@ export const deleteCheatSheet = async (id: string): Promise<boolean> => {
   // Remove strict ownership verification to allow cross-browser deletes
   await deleteDoc(docRef);
   return true;
+};
+
+// Increment cheat sheet view count
+export const incrementCheatSheetView = async (id: string): Promise<void> => {
+  const docRef = doc(db, 'cheatSheets', id);
+  await updateDoc(docRef, {
+    views: increment(1),
+    lastViewedAt: serverTimestamp(),
+  });
+};
+
+// Toggle favorite status
+export const toggleFavoriteStatus = async (id: string, currentStatus: boolean): Promise<void> => {
+  const docRef = doc(db, 'cheatSheets', id);
+  await updateDoc(docRef, {
+    isFavorite: !currentStatus
+  });
 };
 
 // Get a single cheat sheet by ID

@@ -9,6 +9,8 @@ import {
   fetchCustomCategories,
   createCustomCategory,
   deleteCustomCategory,
+  incrementCheatSheetView,
+  toggleFavoriteStatus,
   CustomCategoryData,
 } from '@/lib/database';
 import type { CheatSheetData } from '@/lib/database';
@@ -225,6 +227,67 @@ export const useCheatSheets = () => {
     }
   };
 
+  const incrementView = async (id: string) => {
+    if (!navigator.onLine) {
+      return;
+    }
+    // Optimistic update
+    setCheatSheets(prev =>
+      prev.map(sheet =>
+        sheet.id === id ? { ...sheet, views: (sheet.views || 0) + 1 } : sheet
+      )
+    );
+    try {
+      await incrementCheatSheetView(id);
+    } catch (error) {
+      console.error('Error incrementing view count:', error);
+      // Revert on error
+      setCheatSheets(prev =>
+        prev.map(sheet =>
+          sheet.id === id ? { ...sheet, views: (sheet.views || 0) - 1 } : sheet
+        )
+      );
+      toast({
+        title: "Error",
+        description: "Failed to update view count on the server.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const toggleFavorite = async (id: string, currentStatus: boolean) => {
+    if (!navigator.onLine) {
+      toast({
+        title: "No Internet Connection",
+        description: "Please connect to the internet to update favorites.",
+        variant: "destructive",
+      });
+      return;
+    }
+    // Optimistic update
+    setCheatSheets(prev =>
+      prev.map(sheet =>
+        sheet.id === id ? { ...sheet, isFavorite: !currentStatus } : sheet
+      )
+    );
+    try {
+      await toggleFavoriteStatus(id, currentStatus);
+    } catch (error) {
+      console.error('Error toggling favorite status:', error);
+      // Revert on error
+      setCheatSheets(prev =>
+        prev.map(sheet =>
+          sheet.id === id ? { ...sheet, isFavorite: currentStatus } : sheet
+        )
+      );
+      toast({
+        title: "Error",
+        description: "Failed to update favorite status on the server.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return {
     cheatSheets,
     customCategories,
@@ -238,5 +301,7 @@ export const useCheatSheets = () => {
     saveCustomCategory,
     deleteCustomCategory: deleteCustomCategoryData,
     refreshCustomCategories: loadCustomCategories,
+    incrementView,
+    toggleFavorite,
   };
 };

@@ -24,7 +24,7 @@ const presetCategories = [
 
 const Index = () => {
   const { categoryId } = useParams();
-  const { cheatSheets, isLoading, isOnline, deleteCheatSheet, customCategories } = useCheatSheets();
+  const { cheatSheets, isLoading, isOnline, deleteCheatSheet, customCategories, incrementView, toggleFavorite } = useCheatSheets();
   const { toast } = useToast();
   const [selectedSheet, setSelectedSheet] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -161,14 +161,17 @@ const Index = () => {
             description={selectedSheet.description}
             category={selectedSheet.category}
             items={selectedSheet.content?.items || []}
+            views={selectedSheet.views}
+            isFavorite={selectedSheet.isFavorite}
+            onToggleFavorite={() => toggleFavorite(selectedSheet.id!, selectedSheet.isFavorite)}
           />
         </div>
       </Layout>
     );
   }
 
-  const totalViews = cheatSheets.reduce((acc, sheet) => acc + (sheet.content?.items?.length || 0) * 100, 0);
-  const favoriteCount = cheatSheets.filter(sheet => sheet.category === 'mathematics').length;
+  const totalViews = cheatSheets.reduce((acc, sheet) => acc + (sheet.views || 0), 0);
+  const favoriteCount = cheatSheets.filter(sheet => sheet.isFavorite).length;
   const thisWeekCount = cheatSheets.filter(sheet => {
     const sheetDate = sheet.updatedAt instanceof Date ? sheet.updatedAt : (sheet.updatedAt as any).toDate ? (sheet.updatedAt as any).toDate() : new Date();
     const weekAgo = new Date();
@@ -329,8 +332,12 @@ const Index = () => {
                         size="sm"
                         variant="ghost"
                         className="h-8 w-8 p-0 text-white hover:bg-white/20"
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent card click event
+                          toggleFavorite(sheet.id!, sheet.isFavorite || false);
+                        }}
                       >
-                        <Star className="h-4 w-4" />
+                        <Star className={`h-4 w-4 ${sheet.isFavorite ? 'text-yellow-300 fill-yellow-300' : ''}`} />
                       </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
@@ -401,7 +408,7 @@ const Index = () => {
                         </span>
                         <span className="flex items-center gap-1">
                           <Eye className="h-3 w-3" />
-                          {((sheet.content?.items?.length || 0) * 100).toLocaleString()} views
+                          {(sheet.views || 0).toLocaleString()} views
                         </span>
                       </div>
                       <span>
@@ -414,7 +421,9 @@ const Index = () => {
                       <Button
                         size="sm"
                         onClick={() => {
-                          setSelectedSheet(sheet);
+                          incrementView(sheet.id!);
+                          const updatedSheet = { ...sheet, views: (sheet.views || 0) + 1 };
+                          setSelectedSheet(updatedSheet);
                           setViewMode('viewer');
                         }}
                         className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
