@@ -134,27 +134,25 @@ const Index = () => {
     return (
       <Layout>
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
             <Button
               variant="outline"
               onClick={() => {
                 setViewMode('grid');
                 setSelectedSheet(null);
               }}
-              className="bg-gray-200 text-gray-800 hover:bg-gray-300"
+              className="bg-blue-500 text-white hover:bg-blue-600 border-blue-600"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Grid
             </Button>
-            <div className="flex flex-col sm:flex-row gap-2 items-center">
-              <div className="flex gap-2 w-full sm:w-auto">
-                <Link to={`/edit/${selectedSheet.id}`} className="flex-1 sm:flex-none">
-                  <Button variant="default" className="gap-2 w-full bg-purple-500 text-white hover:bg-purple-600">
-                    <Edit className="h-4 w-4" />
-                    <span className="hidden sm:inline">Edit</span>
-                  </Button>
-                </Link>
-              </div>
+            <div className="flex gap-2">
+              <Link to={`/edit/${selectedSheet.id}`} className="flex-1">
+                <Button variant="default" className="gap-2 w-full bg-purple-500 text-white hover:bg-purple-600">
+                  <Edit className="h-4 w-4" />
+                  <span>Edit</span>
+                </Button>
+              </Link>
             </div>
           </div>
           
