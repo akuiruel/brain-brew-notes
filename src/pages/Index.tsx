@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, Eye, Search, FileText, TrendingUp, Star, Zap, Filter, MoreVertical, Folder } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, Search, FileText, TrendingUp, Star, Zap, Filter, MoreVertical, Folder, ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
 
 // Define preset categories
@@ -135,19 +135,21 @@ const Index = () => {
       <Layout>
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => {
                 setViewMode('grid');
                 setSelectedSheet(null);
               }}
+              className="bg-gray-200 text-gray-800 hover:bg-gray-300"
             >
-              ← Back to Grid
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Grid
             </Button>
             <div className="flex flex-col sm:flex-row gap-2 items-center">
               <div className="flex gap-2 w-full sm:w-auto">
                 <Link to={`/edit/${selectedSheet.id}`} className="flex-1 sm:flex-none">
-                  <Button variant="outline" className="gap-2 w-full">
+                  <Button variant="default" className="gap-2 w-full bg-purple-500 text-white hover:bg-purple-600">
                     <Edit className="h-4 w-4" />
                     <span className="hidden sm:inline">Edit</span>
                   </Button>
