@@ -67,8 +67,8 @@ const Layout = ({ children }: LayoutProps) => {
             </div>
           )}
           
-          <header className="border-b border-border bg-background">
-            <div className="flex items-center gap-4 px-6 py-4">
+          <header className="border-b border-border bg-card shadow-sm">
+            <div className="flex items-center gap-4 px-6 py-3">
               <SidebarTrigger />
               {!isOnline || !isConnected && (
                 <div className="flex items-center gap-1 text-xs ml-auto">
@@ -81,7 +81,7 @@ const Layout = ({ children }: LayoutProps) => {
             </div>
           </header>
           
-          <main className="flex-1 overflow-auto px-6 py-8">
+          <main className="flex-1 overflow-auto px-8 py-6">
             {(!isOnline || !isConnected) ? (
               <div className="flex items-center justify-center min-h-[400px]">
                 <div className="text-center space-y-4">

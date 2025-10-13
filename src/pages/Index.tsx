@@ -183,260 +183,218 @@ const Index = () => {
     <Layout>
       <div className="space-y-6">
         {/* Welcome Header */}
-        <div>
-          <h1 className="text-3xl font-bold mb-1">Selamat datang di aplikasi cheat sheet</h1>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground mb-1">Dashboard</h1>
+            <p className="text-sm text-muted-foreground">Manage your cheat sheets efficiently</p>
+          </div>
+          <Link to="/create">
+            <Button className="gap-2 bg-primary hover:bg-primary/90 shadow-lg">
+              <Plus className="h-4 w-4" />
+              New Sheet
+            </Button>
+          </Link>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="h-12 w-12 rounded-xl bg-blue-500 flex items-center justify-center">
-                  <FileText className="h-6 w-6 text-white" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <Card className="border-0 shadow-md">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Total Sheets</p>
+                  <p className="text-3xl font-bold text-foreground">{cheatSheets.length}</p>
                 </div>
-                <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
-                  +12%
-                </Badge>
-              </div>
-              <div className="space-y-1">
-                <p className="text-3xl font-bold">{cheatSheets.length}</p>
-                <p className="text-sm text-muted-foreground">Total Sheets</p>
+                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <FileText className="h-6 w-6 text-primary" />
+                </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="h-12 w-12 rounded-xl bg-purple-500 flex items-center justify-center">
-                  <TrendingUp className="h-6 w-6 text-white" />
+          <Card className="border-0 shadow-md">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Favorites</p>
+                  <p className="text-3xl font-bold text-foreground">{favoriteCount}</p>
                 </div>
-                <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
-                  +23%
-                </Badge>
-              </div>
-              <div className="space-y-1">
-                <p className="text-3xl font-bold">{(totalViews / 1000).toFixed(1)}K</p>
-                <p className="text-sm text-muted-foreground">Total Views</p>
+                <div className="h-12 w-12 rounded-xl bg-green-500/10 flex items-center justify-center">
+                  <Star className="h-6 w-6 text-green-600" />
+                </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="h-12 w-12 rounded-xl bg-orange-500 flex items-center justify-center">
-                  <Star className="h-6 w-6 text-white" />
+          <Card className="border-0 shadow-md">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">This Week</p>
+                  <p className="text-3xl font-bold text-foreground">{thisWeekCount}</p>
                 </div>
-                <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
-                  +8%
-                </Badge>
-              </div>
-              <div className="space-y-1">
-                <p className="text-3xl font-bold">{favoriteCount}</p>
-                <p className="text-sm text-muted-foreground">Favorites</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="h-12 w-12 rounded-xl bg-green-500 flex items-center justify-center">
-                  <Zap className="h-6 w-6 text-white" />
+                <div className="h-12 w-12 rounded-xl bg-purple-500/10 flex items-center justify-center">
+                  <Zap className="h-6 w-6 text-purple-600" />
                 </div>
-                <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
-                  +2
-                </Badge>
-              </div>
-              <div className="space-y-1">
-                <p className="text-3xl font-bold">{thisWeekCount}</p>
-                <p className="text-sm text-muted-foreground">This Week</p>
               </div>
             </CardContent>
           </Card>
         </div>
 
         {/* Search */}
-        <div className="bg-card border border-border rounded-lg p-4">
-          <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search cheat sheets by title, description, or tags..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-        </div>
+        <Card className="border-0 shadow-md">
+          <CardContent className="p-4">
+            <div className="relative w-full">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search cheat sheets..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 border-0 bg-secondary/50 focus-visible:ring-1"
+              />
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Your Cheat Sheets Section */}
         <div>
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-xl font-semibold">Your Cheat Sheets</h2>
+              <h2 className="text-lg font-semibold text-foreground">Cheat Sheets</h2>
               <p className="text-sm text-muted-foreground">
-                Showing {filteredSheets.length} of {cheatSheets.length} sheets
+                {filteredSheets.length} entries
               </p>
             </div>
-            <Link to="/create">
-              <Button className="gap-2 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600">
-                <Plus className="h-4 w-4" />
-                Create New
-              </Button>
-            </Link>
           </div>
 
           {filteredSheets.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-muted-foreground">
-              {cheatSheets.length === 0 ? (
-                <>
-                  <div className="text-6xl mb-4">📝</div>
-                  <h3 className="text-lg font-medium mb-2">No cheat sheets yet</h3>
-                  <p className="mb-4">Create your first cheat sheet to get started!</p>
-                  <Link to="/create">
-                    <Button className="gap-2 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600">
-                      <Plus className="h-4 w-4" />
-                      Create Your First Cheat Sheet
-                    </Button>
-                  </Link>
-                </>
-              ) : (
-                <>
-                  <div className="text-4xl mb-4">🔍</div>
-                  <h3 className="text-lg font-medium mb-2">No results found</h3>
-                  <p>Try adjusting your search or filter criteria</p>
-                </>
-              )}
-            </div>
-          </div>
+          <Card className="border-0 shadow-md">
+            <CardContent className="text-center py-16">
+              <div className="text-muted-foreground">
+                {cheatSheets.length === 0 ? (
+                  <>
+                    <div className="text-6xl mb-4">📝</div>
+                    <h3 className="text-lg font-semibold mb-2 text-foreground">No cheat sheets yet</h3>
+                    <p className="mb-6 text-sm">Create your first cheat sheet to get started!</p>
+                    <Link to="/create">
+                      <Button className="gap-2 bg-primary hover:bg-primary/90 shadow-md">
+                        <Plus className="h-4 w-4" />
+                        Create Your First Cheat Sheet
+                      </Button>
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-4xl mb-4">🔍</div>
+                    <h3 className="text-lg font-semibold mb-2 text-foreground">No results found</h3>
+                    <p className="text-sm">Try adjusting your search criteria</p>
+                  </>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="space-y-3">
             {filteredSheets.map((sheet) => {
               const displayCategory = sheet.customCategory || sheet.category;
-              const theme = getCategoryTheme(sheet.category, sheet.customCategory);
               return (
-                <Card key={sheet.id} className="overflow-hidden hover:shadow-xl transition-all duration-300 border-0">
-                  {/* Gradient Header */}
-                  <div className={`relative bg-gradient-to-br ${theme.gradient} p-6 min-h-[140px]`}>
-                    {/* Icon */}
-                    <div className="h-12 w-12 rounded-xl bg-white flex items-center justify-center text-2xl shadow-lg">
-                      {getCategoryIcon(sheet.category, sheet.customCategory)}
-                    </div>
-                    
-                    {/* Top Right Actions */}
-                    <div className="absolute top-4 right-4 flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-8 w-8 p-0 text-white hover:bg-white/20"
-                        onClick={(e) => {
-                          e.stopPropagation(); // Prevent card click event
-                          toggleFavorite(sheet.id!, sheet.isFavorite || false);
-                        }}
-                      >
-                        <Star className={`h-4 w-4 ${sheet.isFavorite ? 'text-yellow-300 fill-yellow-300' : ''}`} />
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
+                <Card key={sheet.id} className="border-0 shadow-md hover:shadow-lg transition-all duration-200">
+                  <CardContent className="p-5">
+                    <div className="flex items-start justify-between gap-4">
+                      {/* Left: Number badge */}
+                      <div className="flex items-center gap-4">
+                        <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                          <span className="text-sm font-semibold text-primary-foreground">
+                            {filteredSheets.indexOf(sheet) + 1}
+                          </span>
+                        </div>
+                        
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-base text-foreground mb-1 truncate">
+                            {sheet.title}
+                          </h3>
+                          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                            <span>{format(sheet.updatedAt instanceof Date ? sheet.updatedAt : (sheet.updatedAt as any).toDate(), 'dd/MM/yyyy')}</span>
+                            <span>•</span>
+                            <span className="flex items-center gap-1">
+                              <Eye className="h-3 w-3" />
+                              {sheet.views || 0}
+                            </span>
+                          </div>
+                          
+                          {/* Description preview */}
+                          {sheet.description && (
+                            <p className="text-sm text-muted-foreground mt-2 line-clamp-1">
+                              {sheet.description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Right: Action buttons */}
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0"
+                          onClick={() => {
+                            incrementView(sheet.id!);
+                            setSelectedSheet(sheet);
+                            setViewMode('viewer');
+                          }}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        
+                        <Link to={`/edit/${sheet.id}`}>
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-8 w-8 p-0 text-white hover:bg-white/20"
+                            className="h-8 w-8 p-0"
                           >
-                            <MoreVertical className="h-4 w-4" />
+                            <Edit className="h-4 w-4" />
                           </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Cheat Sheet</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Are you sure you want to delete "{sheet.title}"? This action cannot be undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleDelete(sheet.id!)}
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            >
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </div>
+                        </Link>
 
-                  {/* Content Section */}
-                  <CardContent className="p-6 space-y-4">
-                    {/* Title */}
-                    <h3 className="font-semibold text-lg line-clamp-1">
-                      {sheet.title}
-                    </h3>
-                    
-                    {/* Description */}
-                    {sheet.description && (
-                      <p className="text-sm text-muted-foreground line-clamp-2 min-h-[40px]">
-                        {sheet.description}
-                      </p>
-                    )}
-                    
-                    {/* Tags */}
-                    <div className="flex flex-wrap gap-2">
-                      <Badge variant="secondary" className="text-xs">
-                        {displayCategory.charAt(0).toUpperCase() + displayCategory.slice(1)}
-                      </Badge>
-                      <Badge variant="secondary" className="text-xs">
-                        {sheet.category === 'mathematics' ? 'Basics' : 
-                         sheet.category === 'coding' ? 'ES6' : 
-                         sheet.category === 'software' ? 'Hooks' : 'General'}
-                      </Badge>
-                      <Badge variant="secondary" className="text-xs">
-                        +1
-                      </Badge>
-                    </div>
-                    
-                    {/* Footer Metadata */}
-                    <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t">
-                      <div className="flex items-center gap-3">
-                        <span className="flex items-center gap-1">
-                          <FileText className="h-3 w-3" />
-                          {sheet.content?.items?.length || 0} sections
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Eye className="h-3 w-3" />
-                          {(sheet.views || 0).toLocaleString()} views
-                        </span>
-                      </div>
-                      <span>
-                        {format(sheet.updatedAt instanceof Date ? sheet.updatedAt : (sheet.updatedAt as any).toDate ? (sheet.updatedAt as any).toDate() : new Date(), 'MMM d, yyyy')}
-                      </span>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex gap-2 pt-2">
-                      <Button
-                        size="sm"
-                        onClick={() => {
-                          incrementView(sheet.id!);
-                          const updatedSheet = { ...sheet, views: (sheet.views || 0) + 1 };
-                          setSelectedSheet(updatedSheet);
-                          setViewMode('viewer');
-                        }}
-                        className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
-                      >
-                        <Eye className="h-4 w-4 mr-2" />
-                        View
-                      </Button>
-                      <Link to={`/edit/${sheet.id}`} className="flex-1">
-                        <Button size="sm" className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white">
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0"
+                          onClick={() => toggleFavorite(sheet.id!, sheet.isFavorite || false)}
+                        >
+                          <Star className={`h-4 w-4 ${sheet.isFavorite ? 'text-yellow-500 fill-yellow-500' : ''}`} />
                         </Button>
-                      </Link>
+
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Cheat Sheet</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete "{sheet.title}"? This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDelete(sheet.id!)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -444,7 +402,7 @@ const Index = () => {
             })}
           </div>
         )}
-        </div>
+      </div>
       </div>
     </Layout>
   );

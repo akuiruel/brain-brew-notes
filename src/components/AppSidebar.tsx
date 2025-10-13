@@ -41,25 +41,25 @@ export function AppSidebar() {
   const totalSheets = cheatSheets.length;
 
   return (
-    <Sidebar className={collapsed ? 'w-14' : 'w-60'}>
-      <SidebarHeader className="border-b border-sidebar-border p-4">
+    <Sidebar className={collapsed ? 'w-14' : 'w-64'}>
+      <SidebarHeader className="border-b border-sidebar-border p-5">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
-            <FileText className="h-5 w-5 text-primary-foreground" />
+          <div className="h-11 w-11 rounded-xl bg-primary flex items-center justify-center flex-shrink-0 shadow-sm">
+            <FileText className="h-6 w-6 text-primary-foreground" />
           </div>
           {!collapsed && (
             <div className="flex-1 min-w-0">
-              <h2 className="text-base font-bold text-sidebar-foreground truncate">CheatSheet</h2>
-              <p className="text-sm text-muted-foreground truncate">Knowledge Base</p>
+              <h2 className="text-lg font-bold text-foreground truncate">CheatSheet</h2>
+              <p className="text-xs text-muted-foreground truncate">Your Knowledge Base</p>
             </div>
           )}
         </div>
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="px-3 py-4">
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="space-y-1">
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <NavLink 
@@ -67,12 +67,12 @@ export function AppSidebar() {
                     end
                     className={({ isActive }) => 
                       isActive 
-                        ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' 
-                        : 'hover:bg-sidebar-accent/50'
+                        ? 'bg-primary text-primary-foreground font-medium hover:bg-primary/90' 
+                        : 'hover:bg-sidebar-accent text-sidebar-foreground'
                     }
                   >
                     <Home className="h-5 w-5" />
-                    {!collapsed && <span className="text-base">Dashboard</span>}
+                    {!collapsed && <span className="text-sm font-medium">Dashboard</span>}
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -83,12 +83,12 @@ export function AppSidebar() {
                     to="/favorites"
                     className={({ isActive }) => 
                       isActive 
-                        ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' 
-                        : 'hover:bg-sidebar-accent/50'
+                        ? 'bg-primary text-primary-foreground font-medium hover:bg-primary/90' 
+                        : 'hover:bg-sidebar-accent text-sidebar-foreground'
                     }
                   >
                     <Star className="h-5 w-5" />
-                    {!collapsed && <span className="text-base">Favorites</span>}
+                    {!collapsed && <span className="text-sm font-medium">Favorites</span>}
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -99,12 +99,12 @@ export function AppSidebar() {
                     to="/recent"
                     className={({ isActive }) => 
                       isActive 
-                        ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' 
-                        : 'hover:bg-sidebar-accent/50'
+                        ? 'bg-primary text-primary-foreground font-medium hover:bg-primary/90' 
+                        : 'hover:bg-sidebar-accent text-sidebar-foreground'
                     }
                   >
                     <Clock className="h-5 w-5" />
-                    {!collapsed && <span className="text-base">Recent</span>}
+                    {!collapsed && <span className="text-sm font-medium">Recent</span>}
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -113,27 +113,27 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-sm font-semibold">CATEGORIES</SidebarGroupLabel>
+        <SidebarGroup className="mt-6">
+          <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground px-3 mb-2">CATEGORIES</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="space-y-1">
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <NavLink
                     to="/category/all"
                     className={({ isActive }) =>
                       isActive
-                        ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
-                        : 'hover:bg-sidebar-accent/50'
+                        ? 'bg-primary text-primary-foreground font-medium hover:bg-primary/90'
+                        : 'hover:bg-sidebar-accent text-sidebar-foreground'
                     }
                   >
                     <div className="flex items-center justify-between w-full">
                       <div className="flex items-center gap-2">
-                        <Folder className="h-5 w-5" />
-                        {!collapsed && <span className="text-base">All</span>}
+                        <Folder className="h-4 w-4" />
+                        {!collapsed && <span className="text-sm font-medium">All</span>}
                       </div>
                       {!collapsed && (
-                        <Badge variant="secondary" className="text-xs">
+                        <Badge variant="secondary" className="text-xs bg-muted">
                           {totalSheets}
                         </Badge>
                       )}
@@ -151,17 +151,17 @@ export function AppSidebar() {
                         to={`/category/${category.id}`}
                         className={({ isActive }) =>
                           isActive
-                            ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
-                            : 'hover:bg-sidebar-accent/50'
+                            ? 'bg-primary text-primary-foreground font-medium hover:bg-primary/90'
+                            : 'hover:bg-sidebar-accent text-sidebar-foreground'
                         }
                       >
                         <div className="flex items-center justify-between w-full">
                           <div className="flex items-center gap-2">
-                            <span className="text-lg">{category.icon}</span>
-                            {!collapsed && <span className="text-base">{category.name}</span>}
+                            <span className="text-base">{category.icon}</span>
+                            {!collapsed && <span className="text-sm font-medium">{category.name}</span>}
                           </div>
                           {!collapsed && count > 0 && (
-                            <Badge variant="secondary" className="text-xs">
+                            <Badge variant="secondary" className="text-xs bg-muted">
                               {count}
                             </Badge>
                           )}
@@ -181,17 +181,17 @@ export function AppSidebar() {
                         to={`/category/custom-${category.id}`}
                         className={({ isActive }) =>
                           isActive
-                            ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
-                            : 'hover:bg-sidebar-accent/50'
+                            ? 'bg-primary text-primary-foreground font-medium hover:bg-primary/90'
+                            : 'hover:bg-sidebar-accent text-sidebar-foreground'
                         }
                       >
                         <div className="flex items-center justify-between w-full">
                           <div className="flex items-center gap-2">
-                            <span className="text-lg">{category.icon}</span>
-                            {!collapsed && <span className="text-base">{category.name}</span>}
+                            <span className="text-base">{category.icon}</span>
+                            {!collapsed && <span className="text-sm font-medium">{category.name}</span>}
                           </div>
                           {!collapsed && count > 0 && (
-                            <Badge variant="secondary" className="text-xs">
+                            <Badge variant="secondary" className="text-xs bg-muted">
                               {count}
                             </Badge>
                           )}
