@@ -294,7 +294,7 @@ const Index = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {filteredSheets.map((sheet) => {
               const displayCategory = sheet.customCategory || sheet.category;
               return (
@@ -343,6 +343,7 @@ const Index = () => {
                             setSelectedSheet(sheet);
                             setViewMode('viewer');
                           }}
+                          data-testid={`view-button-${sheet.id}`}
                         >
                           <Eye className="h-4 w-4" />
                         </Button>

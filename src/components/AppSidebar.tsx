@@ -72,7 +72,7 @@ export function AppSidebar() {
                     }
                   >
                     <Home className="h-5 w-5" />
-                    {!collapsed && <span className="text-sm font-medium">Dashboard</span>}
+                    {!collapsed && <span className="text-sm font-medium text-sidebar-foreground">Dashboard</span>}
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -88,7 +88,7 @@ export function AppSidebar() {
                     }
                   >
                     <Star className="h-5 w-5" />
-                    {!collapsed && <span className="text-sm font-medium">Favorites</span>}
+                    {!collapsed && <span className="text-sm font-medium text-sidebar-foreground">Favorites</span>}
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -104,7 +104,7 @@ export function AppSidebar() {
                     }
                   >
                     <Clock className="h-5 w-5" />
-                    {!collapsed && <span className="text-sm font-medium">Recent</span>}
+                    {!collapsed && <span className="text-sm font-medium text-sidebar-foreground">Recent</span>}
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -130,7 +130,7 @@ export function AppSidebar() {
                     <div className="flex items-center justify-between w-full">
                       <div className="flex items-center gap-2">
                         <Folder className="h-4 w-4" />
-                        {!collapsed && <span className="text-sm font-medium">All</span>}
+                        {!collapsed && <span className="text-sm font-medium text-sidebar-foreground">All</span>}
                       </div>
                       {!collapsed && (
                         <Badge variant="secondary" className="text-xs bg-muted">
@@ -158,7 +158,7 @@ export function AppSidebar() {
                         <div className="flex items-center justify-between w-full">
                           <div className="flex items-center gap-2">
                             <span className="text-base">{category.icon}</span>
-                            {!collapsed && <span className="text-sm font-medium">{category.name}</span>}
+                            {!collapsed && <span className="text-sm font-medium text-sidebar-foreground">{category.name}</span>}
                           </div>
                           {!collapsed && count > 0 && (
                             <Badge variant="secondary" className="text-xs bg-muted">
@@ -188,7 +188,7 @@ export function AppSidebar() {
                         <div className="flex items-center justify-between w-full">
                           <div className="flex items-center gap-2">
                             <span className="text-base">{category.icon}</span>
-                            {!collapsed && <span className="text-sm font-medium">{category.name}</span>}
+                            {!collapsed && <span className="text-sm font-medium text-sidebar-foreground">{category.name}</span>}
                           </div>
                           {!collapsed && count > 0 && (
                             <Badge variant="secondary" className="text-xs bg-muted">
