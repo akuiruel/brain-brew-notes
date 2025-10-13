@@ -294,7 +294,7 @@ const Index = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
             {filteredSheets.map((sheet) => {
               const displayCategory = sheet.customCategory || sheet.category;
               return (
@@ -333,7 +333,7 @@ const Index = () => {
                       </div>
 
                       {/* Right: Action buttons */}
-                      <div className="flex items-center gap-2 flex-shrink-0">
+                      <div className="flex items-center gap-2 flex-wrap flex-shrink-0">
                         <Button
                           size="sm"
                           variant="ghost"
