@@ -310,7 +310,7 @@ const Index = () => {
                         </div>
                         
                         {/* Content */}
-                        <div className="flex-1 min-w-0">
+                        <div className="flex-1 min-w-0 flex-shrink">
                           <h3 className="font-semibold text-base text-foreground mb-1 truncate">
                             {sheet.title}
                           </h3>
@@ -333,7 +333,7 @@ const Index = () => {
                       </div>
 
                       {/* Right: Action buttons */}
-                      <div className="flex items-center gap-2 flex-wrap flex-shrink-0">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <Button
                           size="sm"
                           variant="ghost"
