@@ -294,13 +294,13 @@ const Index = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 grid-flow-row-dense">
             {filteredSheets.map((sheet) => {
               const displayCategory = sheet.customCategory || sheet.category;
               return (
-                <Card key={sheet.id} className="border-0 shadow-md hover:shadow-lg transition-all duration-200">
-                  <CardContent className="p-5">
-                    <div className="flex items-start justify-between gap-4">
+                <Card key={sheet.id} className="border-0 shadow-md hover:shadow-lg transition-all duration-200 flex flex-col">
+                  <CardContent className="p-5 flex-1">
+                    <div className="flex items-start gap-4">
                       {/* Left: Number badge */}
                       <div className="flex items-center gap-4">
                         <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
@@ -331,73 +331,72 @@ const Index = () => {
                           )}
                         </div>
                       </div>
-
-                      {/* Right: Action buttons */}
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-8 w-8 p-0"
-                          onClick={() => {
-                            incrementView(sheet.id!);
-                            setSelectedSheet(sheet);
-                            setViewMode('viewer');
-                          }}
-                          data-testid={`view-button-${sheet.id}`}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        
-                        <Link to={`/edit/${sheet.id}`}>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-8 w-8 p-0"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </Link>
-
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-8 w-8 p-0"
-                          onClick={() => toggleFavorite(sheet.id!, sheet.isFavorite || false)}
-                        >
-                          <Star className={`h-4 w-4 ${sheet.isFavorite ? 'text-yellow-500 fill-yellow-500' : ''}`} />
-                        </Button>
-
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete Cheat Sheet</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Are you sure you want to delete "{sheet.title}"? This action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => handleDelete(sheet.id!)}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                              >
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
                     </div>
                   </CardContent>
+                  {/* Action buttons */}
+                  <div className="flex items-center justify-end gap-2 p-3 border-t">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 w-8 p-0"
+                      onClick={() => {
+                        incrementView(sheet.id!);
+                        setSelectedSheet(sheet);
+                        setViewMode('viewer');
+                      }}
+                      data-testid={`view-button-${sheet.id}`}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+
+                    <Link to={`/edit/${sheet.id}`}>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 w-8 p-0"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    </Link>
+
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 w-8 p-0"
+                      onClick={() => toggleFavorite(sheet.id!, sheet.isFavorite || false)}
+                    >
+                      <Star className={`h-4 w-4 ${sheet.isFavorite ? 'text-yellow-500 fill-yellow-500' : ''}`} />
+                    </Button>
+
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Cheat Sheet</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete "{sheet.title}"? This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDelete(sheet.id!)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                 </Card>
               );
             })}
