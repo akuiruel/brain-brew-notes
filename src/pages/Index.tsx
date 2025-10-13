@@ -294,7 +294,7 @@ const Index = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 grid-flow-row-dense">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {filteredSheets.map((sheet) => {
               const displayCategory = sheet.customCategory || sheet.category;
               return (
