@@ -16,8 +16,14 @@ const Recent = () => {
   const recentSheets = cheatSheets
     .filter(sheet => sheet.lastViewedAt)
     .sort((a, b) => {
-      const timeA = a.lastViewedAt ? new Date(a.lastViewedAt).getTime() : 0;
-      const timeB = b.lastViewedAt ? new Date(b.lastViewedAt).getTime() : 0;
+      const getTime = (date: any) => {
+        if (!date) return 0;
+        if (date instanceof Date) return date.getTime();
+        if (date.toDate) return date.toDate().getTime();
+        return new Date(date).getTime();
+      };
+      const timeA = getTime(a.lastViewedAt);
+      const timeB = getTime(b.lastViewedAt);
       return timeB - timeA;
     })
     .slice(0, 20); // Limit to the 20 most recent
