@@ -65,14 +65,10 @@ export function AppSidebar() {
                   <NavLink 
                     to="/" 
                     end
-                    className={({ isActive }) => 
-                      isActive 
-                        ? 'bg-primary text-primary-foreground font-medium hover:bg-primary/90' 
-                        : 'hover:bg-sidebar-accent text-sidebar-foreground'
-                    }
+                    className="bg-primary text-primary-foreground font-medium hover:bg-primary/90"
                   >
                     <Home className="h-5 w-5" />
-                    {!collapsed && <span className="text-sm font-medium text-sidebar-foreground">Dashboard</span>}
+                    {!collapsed && <span className="text-sm font-medium">Dashboard</span>}
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -121,19 +117,15 @@ export function AppSidebar() {
                 <SidebarMenuButton asChild>
                   <NavLink
                     to="/category/all"
-                    className={({ isActive }) =>
-                      isActive
-                        ? 'bg-primary text-primary-foreground font-medium hover:bg-primary/90'
-                        : 'hover:bg-sidebar-accent text-sidebar-foreground'
-                    }
+                    className="bg-primary text-primary-foreground font-medium hover:bg-primary/90"
                   >
                     <div className="flex items-center justify-between w-full">
                       <div className="flex items-center gap-2">
                         <Folder className="h-4 w-4" />
-                        {!collapsed && <span className="text-sm font-medium text-sidebar-foreground">All</span>}
+                        {!collapsed && <span className="text-sm font-medium">All</span>}
                       </div>
                       {!collapsed && (
-                        <Badge variant="secondary" className="text-xs bg-muted">
+                        <Badge variant="secondary" className="text-xs bg-primary-foreground/20 text-primary-foreground">
                           {totalSheets}
                         </Badge>
                       )}

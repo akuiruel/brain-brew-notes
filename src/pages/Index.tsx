@@ -182,18 +182,20 @@ const Index = () => {
   return (
     <Layout>
       <div className="space-y-6">
-        {/* Welcome Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground mb-1">Dashboard</h1>
-            <p className="text-sm text-muted-foreground">Manage your cheat sheets efficiently</p>
+        {/* Blue Header */}
+        <div className="bg-primary text-primary-foreground rounded-xl p-8 shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold">Dashboard</h1>
+              <p className="text-primary-foreground/80 mt-2">Manage your cheat sheets efficiently</p>
+            </div>
+            <Link to="/create">
+              <Button className="gap-2 bg-white text-primary hover:bg-white/90">
+                <Plus className="h-5 w-5" />
+                New Sheet
+              </Button>
+            </Link>
           </div>
-          <Link to="/create">
-            <Button className="gap-2 bg-primary hover:bg-primary/90 shadow-lg">
-              <Plus className="h-4 w-4" />
-              New Sheet
-            </Button>
-          </Link>
         </div>
 
         {/* Stats Cards */}
@@ -337,8 +339,8 @@ const Index = () => {
                   <div className="flex items-center justify-end gap-2 p-3 border-t">
                     <Button
                       size="sm"
-                      variant="ghost"
-                      className="h-8 w-8 p-0"
+                      variant="default"
+                      className="h-8 px-4 gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
                       onClick={() => {
                         incrementView(sheet.id!);
                         setSelectedSheet(sheet);
@@ -347,12 +349,13 @@ const Index = () => {
                       data-testid={`view-button-${sheet.id}`}
                     >
                       <Eye className="h-4 w-4" />
+                      View
                     </Button>
 
                     <Link to={`/edit/${sheet.id}`}>
                       <Button
                         size="sm"
-                        variant="ghost"
+                        variant="outline"
                         className="h-8 w-8 p-0"
                       >
                         <Edit className="h-4 w-4" />
@@ -361,7 +364,7 @@ const Index = () => {
 
                     <Button
                       size="sm"
-                      variant="ghost"
+                      variant="outline"
                       className="h-8 w-8 p-0"
                       onClick={() => toggleFavorite(sheet.id!, sheet.isFavorite || false)}
                     >
@@ -372,7 +375,7 @@ const Index = () => {
                       <AlertDialogTrigger asChild>
                         <Button
                           size="sm"
-                          variant="ghost"
+                          variant="outline"
                           className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
                         >
                           <Trash2 className="h-4 w-4" />
