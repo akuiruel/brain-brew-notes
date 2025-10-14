@@ -295,236 +295,231 @@ const CreateCheatSheet = () => {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Left Panel */}
-            <div className="space-y-6">
-              {/* Basic Information Card */}
-              <Card className="border-0 shadow-lg">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
-                      <FileText className="w-4 h-4 text-white" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-base">Basic Information</CardTitle>
-                      <p className="text-xs text-muted-foreground">Set up your cheat sheet details</p>
-                    </div>
+          <div className="flex flex-col gap-6">
+            {/* Basic Information Card */}
+            <Card className="border-0 shadow-lg">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
+                    <FileText className="w-4 h-4 text-white" />
                   </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
                   <div>
-                    <Label htmlFor="title" className="flex items-center gap-1 text-xs font-medium mb-2">
-                      <span className="text-destructive">*</span> Title
-                    </Label>
-                    <Input
-                      id="title"
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      placeholder="Enter cheat sheet title..."
-                      className="bg-background"
-                    />
+                    <CardTitle className="text-base">Basic Information</CardTitle>
+                    <p className="text-xs text-muted-foreground">Set up your cheat sheet details</p>
                   </div>
-                  
-                  <div>
-                    <Label className="flex items-center gap-1 text-xs font-medium mb-2">
-                      <span className="text-destructive">*</span> Category
-                    </Label>
-                    <p className="text-xs text-muted-foreground mb-3">Select a category or create a new one</p>
-                    
-                    {/* All Categories Button */}
-                    <Button
-                      variant="outline"
-                      className="w-full justify-between mb-2 bg-background"
-                      onClick={() => setCategory('')}
-                    >
-                      <span className="text-sm">All Categories</span>
-                      <Badge variant="secondary" className="text-xs">
-                        {customCategories.length + presetCategories.length} total
-                      </Badge>
-                    </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="title" className="flex items-center gap-1 text-xs font-medium mb-2">
+                    <span className="text-destructive">*</span> Title
+                  </Label>
+                  <Input
+                    id="title"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="Enter cheat sheet title..."
+                    className="bg-background"
+                  />
+                </div>
 
-                    {/* Preset Categories */}
-                    <div className="space-y-2">
-                      {presetCategories.map((cat) => (
+                <div>
+                  <Label className="flex items-center gap-1 text-xs font-medium mb-2">
+                    <span className="text-destructive">*</span> Category
+                  </Label>
+                  <p className="text-xs text-muted-foreground mb-3">Select a category or create a new one</p>
+                  
+                  {/* All Categories Button */}
+                  <Button
+                    variant="outline"
+                    className="w-full justify-between mb-2 bg-background"
+                    onClick={() => setCategory('')}
+                  >
+                    <span className="text-sm">All Categories</span>
+                    <Badge variant="secondary" className="text-xs">
+                      {customCategories.length + presetCategories.length} total
+                    </Badge>
+                  </Button>
+
+                  {/* Preset Categories */}
+                  <div className="space-y-2">
+                    {presetCategories.map((cat) => (
+                      <Button
+                        key={cat.id}
+                        variant={category === cat.id ? "default" : "outline"}
+                        className="w-full justify-between bg-background"
+                        onClick={() => handleCategorySelect(cat.id, '')}
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className={`w-6 h-6 rounded ${cat.color} flex items-center justify-center`}>
+                            <cat.icon className="w-3 h-3 text-white" />
+                          </div>
+                          <span className="text-sm">{cat.name}</span>
+                        </div>
+                        <Badge variant="outline" className="text-xs">Preset</Badge>
+                      </Button>
+                    ))}
+                  </div>
+
+                  {/* Custom Categories */}
+                  {customCategories.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      <p className="text-xs font-medium text-muted-foreground">Custom Categories</p>
+                      {customCategories.map((cat) => (
                         <Button
                           key={cat.id}
-                          variant={category === cat.id ? "default" : "outline"}
+                          variant={customCategoryId === cat.id ? "default" : "outline"}
                           className="w-full justify-between bg-background"
-                          onClick={() => handleCategorySelect(cat.id, '')}
+                          onClick={() => handleCategorySelect('custom', cat.id)}
                         >
                           <div className="flex items-center gap-2">
-                            <div className={`w-6 h-6 rounded ${cat.color} flex items-center justify-center`}>
-                              <cat.icon className="w-3 h-3 text-white" />
+                            <div className="w-6 h-6 rounded bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center">
+                              <FileText className="w-3 h-3 text-white" />
                             </div>
                             <span className="text-sm">{cat.name}</span>
                           </div>
-                          <Badge variant="outline" className="text-xs">Preset</Badge>
                         </Button>
                       ))}
                     </div>
+                  )}
 
-                    {/* Custom Categories */}
-                    {customCategories.length > 0 && (
-                      <div className="mt-3 space-y-2">
-                        <p className="text-xs font-medium text-muted-foreground">Custom Categories</p>
-                        {customCategories.map((cat) => (
-                          <Button
-                            key={cat.id}
-                            variant={customCategoryId === cat.id ? "default" : "outline"}
-                            className="w-full justify-between bg-background"
-                            onClick={() => handleCategorySelect('custom', cat.id)}
-                          >
-                            <div className="flex items-center gap-2">
-                              <div className="w-6 h-6 rounded bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center">
-                                <FileText className="w-3 h-3 text-white" />
-                              </div>
-                              <span className="text-sm">{cat.name}</span>
-                            </div>
-                          </Button>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Category Manager */}
-                    <div className="mt-3">
-                      <EnhancedCategoryManager 
-                        onCategorySelect={handleCategorySelect}
-                        selectedCategory={category}
-                        selectedCustomCategory={customCategoryId}
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="description" className="text-xs font-medium mb-2 block">Description</Label>
-                    <Textarea
-                      id="description"
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      placeholder="Enter description (optional)..."
-                      rows={4}
-                      className="bg-background resize-none"
+                  {/* Category Manager */}
+                  <div className="mt-3">
+                    <EnhancedCategoryManager
+                      onCategorySelect={handleCategorySelect}
+                      selectedCategory={category}
+                      selectedCustomCategory={customCategoryId}
                     />
                   </div>
-                </CardContent>
-              </Card>
+                </div>
 
-              {/* Add Content Card */}
-              <Card className="border-0 shadow-lg">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center">
-                      <Plus className="w-4 h-4 text-white" />
+                <div>
+                  <Label htmlFor="description" className="text-xs font-medium mb-2 block">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Enter description (optional)..."
+                    rows={4}
+                    className="bg-background resize-none"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Add Content Card */}
+            <Card className="border-0 shadow-lg">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center">
+                    <Plus className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-base">Add Content</CardTitle>
+                    <p className="text-xs text-muted-foreground">Build your cheat sheet with blocks</p>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button
+                  variant="outline"
+                  onClick={() => addContentItem('text')}
+                  className="w-full justify-start gap-3 h-auto py-3 bg-background"
+                >
+                  <div className="w-8 h-8 rounded bg-blue-500 flex items-center justify-center flex-shrink-0">
+                    <FileText className="h-4 w-4 text-white" />
+                  </div>
+                  <div className="text-left flex-1">
+                    <p className="text-sm font-medium">Add Text Block</p>
+                    <p className="text-xs text-muted-foreground">Plain text content</p>
+                  </div>
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => addContentItem('code')}
+                  className="w-full justify-start gap-3 h-auto py-3 bg-background"
+                >
+                  <div className="w-8 h-8 rounded bg-purple-500 flex items-center justify-center flex-shrink-0">
+                    <Code2 className="h-4 w-4 text-white" />
+                  </div>
+                  <div className="text-left flex-1">
+                    <p className="text-sm font-medium">Add Code Block</p>
+                    <p className="text-xs text-muted-foreground">Code snippets with syntax</p>
+                  </div>
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => addContentItem('math')}
+                  className="w-full justify-start gap-3 h-auto py-3 bg-background"
+                >
+                  <div className="w-8 h-8 rounded bg-green-500 flex items-center justify-center flex-shrink-0">
+                    <Calculator className="h-4 w-4 text-white" />
+                  </div>
+                  <div className="text-left flex-1">
+                    <p className="text-sm font-medium">Add Math Formula</p>
+                    <p className="text-xs text-muted-foreground">Mathematical expressions</p>
+                  </div>
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Content Area */}
+            <Card className="border-0 shadow-lg">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center">
+                    <FileText className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-base">Content</CardTitle>
+                    <p className="text-xs text-muted-foreground">
+                      {contentItems.length === 0 ? 'No content yet' : `${contentItems.length} block${contentItems.length > 1 ? 's' : ''}`}
+                    </p>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {contentItems.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+                    <div className="w-16 h-16 rounded-full bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center mb-4">
+                      <FileText className="w-8 h-8 text-purple-500" />
                     </div>
-                    <div>
-                      <CardTitle className="text-base">Add Content</CardTitle>
-                      <p className="text-xs text-muted-foreground">Build your cheat sheet with blocks</p>
+                    <h3 className="text-lg font-semibold mb-2">No content added yet</h3>
+                    <p className="text-sm text-muted-foreground mb-4 max-w-xs">
+                      Use the buttons on the left to add text, code, or formulas to your cheat sheet
+                    </p>
+                    <div className="flex gap-2 flex-wrap justify-center">
+                      <Button size="sm" variant="outline" onClick={() => addContentItem('text')} className="gap-2">
+                        <Plus className="h-3 w-3" />
+                        Add Text
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => addContentItem('code')} className="gap-2">
+                        <Plus className="h-3 w-3" />
+                        Add Code
+                      </Button>
                     </div>
                   </div>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => addContentItem('text')}
-                    className="w-full justify-start gap-3 h-auto py-3 bg-background"
-                  >
-                    <div className="w-8 h-8 rounded bg-blue-500 flex items-center justify-center flex-shrink-0">
-                      <FileText className="h-4 w-4 text-white" />
-                    </div>
-                    <div className="text-left flex-1">
-                      <p className="text-sm font-medium">Add Text Block</p>
-                      <p className="text-xs text-muted-foreground">Plain text content</p>
-                    </div>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => addContentItem('code')}
-                    className="w-full justify-start gap-3 h-auto py-3 bg-background"
-                  >
-                    <div className="w-8 h-8 rounded bg-purple-500 flex items-center justify-center flex-shrink-0">
-                      <Code2 className="h-4 w-4 text-white" />
-                    </div>
-                    <div className="text-left flex-1">
-                      <p className="text-sm font-medium">Add Code Block</p>
-                      <p className="text-xs text-muted-foreground">Code snippets with syntax</p>
-                    </div>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => addContentItem('math')}
-                    className="w-full justify-start gap-3 h-auto py-3 bg-background"
-                  >
-                    <div className="w-8 h-8 rounded bg-green-500 flex items-center justify-center flex-shrink-0">
-                      <Calculator className="h-4 w-4 text-white" />
-                    </div>
-                    <div className="text-left flex-1">
-                      <p className="text-sm font-medium">Add Math Formula</p>
-                      <p className="text-xs text-muted-foreground">Mathematical expressions</p>
-                    </div>
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Right Panel - Content Area */}
-            <div>
-              <Card className="border-0 shadow-lg">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center">
-                      <FileText className="w-4 h-4 text-white" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-base">Content</CardTitle>
-                      <p className="text-xs text-muted-foreground">
-                        {contentItems.length === 0 ? 'No content yet' : `${contentItems.length} block${contentItems.length > 1 ? 's' : ''}`}
-                      </p>
-                    </div>
+                ) : (
+                  <div className="space-y-4">
+                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                      <SortableContext items={displayItems.map((i) => i.id)}>
+                        {displayItems.map((item, index) => (
+                          <SortableItem
+                            key={item.id}
+                            item={item}
+                            index={index}
+                            length={displayItems.length}
+                            onRemove={removeContentItem}
+                            onMoveTo={handlePositionChange}
+                            updateContentItem={updateContentItem}
+                          />
+                        ))}
+                      </SortableContext>
+                    </DndContext>
                   </div>
-                </CardHeader>
-                <CardContent>
-                  {contentItems.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-                      <div className="w-16 h-16 rounded-full bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center mb-4">
-                        <FileText className="w-8 h-8 text-purple-500" />
-                      </div>
-                      <h3 className="text-lg font-semibold mb-2">No content added yet</h3>
-                      <p className="text-sm text-muted-foreground mb-4 max-w-xs">
-                        Use the buttons on the left to add text, code, or formulas to your cheat sheet
-                      </p>
-                      <div className="flex gap-2 flex-wrap justify-center">
-                        <Button size="sm" variant="outline" onClick={() => addContentItem('text')} className="gap-2">
-                          <Plus className="h-3 w-3" />
-                          Add Text
-                        </Button>
-                        <Button size="sm" variant="outline" onClick={() => addContentItem('code')} className="gap-2">
-                          <Plus className="h-3 w-3" />
-                          Add Code
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                        <SortableContext items={displayItems.map((i) => i.id)}>
-                          {displayItems.map((item, index) => (
-                            <SortableItem
-                              key={item.id}
-                              item={item}
-                              index={index}
-                              length={displayItems.length}
-                              onRemove={removeContentItem}
-                              onMoveTo={handlePositionChange}
-                              updateContentItem={updateContentItem}
-                            />
-                          ))}
-                        </SortableContext>
-                      </DndContext>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
