@@ -300,7 +300,14 @@ const Index = () => {
             {filteredSheets.map((sheet) => {
               const displayCategory = sheet.customCategory || sheet.category;
               return (
-                <Card key={sheet.id} className="border-0 shadow-md hover:shadow-lg transition-all duration-200 flex flex-col">
+                <Card key={sheet.id} className="border-0 shadow-md hover:shadow-lg transition-all duration-200 flex flex-col overflow-hidden">
+                  {/* Blue Header */}
+                  <div className="bg-primary px-5 py-3">
+                    <h3 className="font-semibold text-base text-primary-foreground truncate">
+                      {sheet.title}
+                    </h3>
+                  </div>
+                  
                   <CardContent className="p-5 flex-1">
                     <div className="flex items-start gap-4">
                       {/* Left: Number badge */}
@@ -313,9 +320,6 @@ const Index = () => {
                         
                         {/* Content */}
                         <div className="flex-1 min-w-0 flex-shrink">
-                          <h3 className="font-semibold text-base text-foreground mb-1 truncate">
-                            {sheet.title}
-                          </h3>
                           <div className="flex items-center gap-3 text-xs text-muted-foreground">
                             <span>{format(sheet.updatedAt instanceof Date ? sheet.updatedAt : (sheet.updatedAt as any).toDate(), 'dd/MM/yyyy')}</span>
                             <span>•</span>
