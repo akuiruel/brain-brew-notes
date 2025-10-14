@@ -81,7 +81,7 @@ const Layout = ({ children }: LayoutProps) => {
             </div>
           </header>
           
-          <main className="flex-1 overflow-auto py-6">
+          <main className="flex-1 overflow-auto px-8 py-6">
             {(!isOnline || !isConnected) ? (
               <div className="flex items-center justify-center min-h-[400px]">
                 <div className="text-center space-y-4">
