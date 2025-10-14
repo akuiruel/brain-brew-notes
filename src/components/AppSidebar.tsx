@@ -80,11 +80,11 @@ export function AppSidebar() {
                     className={({ isActive }) => 
                       isActive 
                         ? 'bg-primary text-primary-foreground font-medium hover:bg-primary/90' 
-                        : 'hover:bg-primary hover:text-primary-foreground text-sidebar-foreground'
+                        : 'hover:bg-sidebar-accent text-sidebar-foreground'
                     }
                   >
                     <Star className="h-5 w-5" />
-                    {!collapsed && <span className="text-sm font-medium">Favorites</span>}
+                    {!collapsed && <span className="text-sm font-medium text-sidebar-foreground">Favorites</span>}
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -96,11 +96,11 @@ export function AppSidebar() {
                     className={({ isActive }) => 
                       isActive 
                         ? 'bg-primary text-primary-foreground font-medium hover:bg-primary/90' 
-                        : 'hover:bg-primary hover:text-primary-foreground text-sidebar-foreground'
+                        : 'hover:bg-sidebar-accent text-sidebar-foreground'
                     }
                   >
                     <Clock className="h-5 w-5" />
-                    {!collapsed && <span className="text-sm font-medium">Recent</span>}
+                    {!collapsed && <span className="text-sm font-medium text-sidebar-foreground">Recent</span>}
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -144,13 +144,13 @@ export function AppSidebar() {
                         className={({ isActive }) =>
                           isActive
                             ? 'bg-primary text-primary-foreground font-medium hover:bg-primary/90'
-                            : 'hover:bg-primary hover:text-primary-foreground text-sidebar-foreground'
+                            : 'hover:bg-sidebar-accent text-sidebar-foreground'
                         }
                       >
                         <div className="flex items-center justify-between w-full">
                           <div className="flex items-center gap-2">
                             <span className="text-base">{category.icon}</span>
-                            {!collapsed && <span className="text-sm font-medium">{category.name}</span>}
+                            {!collapsed && <span className="text-sm font-medium text-sidebar-foreground">{category.name}</span>}
                           </div>
                           {!collapsed && count > 0 && (
                             <Badge variant="secondary" className="text-xs bg-muted">
@@ -174,13 +174,13 @@ export function AppSidebar() {
                         className={({ isActive }) =>
                           isActive
                             ? 'bg-primary text-primary-foreground font-medium hover:bg-primary/90'
-                            : 'hover:bg-primary hover:text-primary-foreground text-sidebar-foreground'
+                            : 'hover:bg-sidebar-accent text-sidebar-foreground'
                         }
                       >
                         <div className="flex items-center justify-between w-full">
                           <div className="flex items-center gap-2">
                             <span className="text-base">{category.icon}</span>
-                            {!collapsed && <span className="text-sm font-medium">{category.name}</span>}
+                            {!collapsed && <span className="text-sm font-medium text-sidebar-foreground">{category.name}</span>}
                           </div>
                           {!collapsed && count > 0 && (
                             <Badge variant="secondary" className="text-xs bg-muted">
